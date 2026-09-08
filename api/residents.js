@@ -26,29 +26,43 @@ module.exports = async function handler(req, res) {
   return fail(res, 405, 'Method not allowed');
 };
 
+const RESIDENTS_PAGE_SIZE = 50;
+
 async function handleList(req, res) {
   const auth = await requireRole(req, res, ['admin', 'security']);
   if (!auth) return;
 
-  const { q, flat } = req.query;
+  const { q, flat, occupancy_type, page } = req.query;
   const supabase = getSupabaseAdmin();
 
-  let query = supabase
-    .from('residents')
-    .select(
-      'id, flat_number, occupancy_type, resident_name, phone, email, photo_path, status, is_council_member, lease_expiry_date, created_at'
-    )
-    .eq('status', 'active')
-    .order('flat_number', { ascending: true });
+  const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+  const from = (pageNum - 1) * RESIDENTS_PAGE_SIZE;
+  const to = from + RESIDENTS_PAGE_SIZE - 1;
 
-  if (flat) {
-    query = query.ilike('flat_number', `%${flat}%`);
-  }
-  if (q) {
-    query = query.ilike('resident_name', `%${q}%`);
+  // includeOccupancy=false is used for the pill-count queries below, so
+  // they reflect the search/flat filter but never the occupancy_type
+  // filter itself — otherwise selecting "Owners" would make every pill's
+  // count (including "Tenants") reflect an owner-only query.
+  function applyFilters(q_, { includeOccupancy = true } = {}) {
+    let query = q_.eq('status', 'active');
+    if (flat) query = query.ilike('flat_number', `%${flat}%`);
+    if (q) query = query.ilike('resident_name', `%${q}%`);
+    if (includeOccupancy && occupancy_type && ['owner', 'tenant'].includes(occupancy_type)) {
+      query = query.eq('occupancy_type', occupancy_type);
+    }
+    return query;
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await applyFilters(
+    supabase
+      .from('residents')
+      .select(
+        'id, flat_number, occupancy_type, resident_name, phone, email, photo_path, status, is_council_member, lease_expiry_date, created_at',
+        { count: 'exact' }
+      )
+  )
+    .order('flat_number', { ascending: true })
+    .range(from, to);
 
   if (error) {
     console.error('List residents failed:', error.message);
@@ -70,7 +84,26 @@ async function handleList(req, res) {
     });
   }
 
-  return ok(res, data);
+  // Totals for the All/Owners/Tenants filter pills — reflect the search/
+  // flat filter currently applied (if any), but never the occupancy_type
+  // filter, so switching pills always shows counts for all three options.
+  const [allRes, ownerRes, tenantRes] = await Promise.all([
+    applyFilters(supabase.from('residents').select('id', { count: 'exact', head: true }), { includeOccupancy: false }),
+    applyFilters(supabase.from('residents').select('id', { count: 'exact', head: true }), { includeOccupancy: false }).eq('occupancy_type', 'owner'),
+    applyFilters(supabase.from('residents').select('id', { count: 'exact', head: true }), { includeOccupancy: false }).eq('occupancy_type', 'tenant'),
+  ]);
+
+  return ok(res, {
+    entries: data,
+    page: pageNum,
+    page_size: RESIDENTS_PAGE_SIZE,
+    total: count || 0,
+    counts: {
+      all: allRes.count || 0,
+      owner: ownerRes.count || 0,
+      tenant: tenantRes.count || 0,
+    },
+  });
 }
 
 async function handleCreate(req, res) {

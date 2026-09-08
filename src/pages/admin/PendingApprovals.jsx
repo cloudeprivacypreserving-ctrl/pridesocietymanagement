@@ -7,24 +7,39 @@ import { CheckCircle, XCircle, History } from '../../components/icons';
 const PILL = { pending: 'pill-pending', approved: 'pill-approved', rejected: 'pill-rejected' };
 
 export default function PendingApprovals() {
-  const [items, setItems] = useState([]);
+  const [pending, setPending] = useState([]);
+  const [history, setHistory] = useState({ entries: [], page: 1, page_size: 50, total: 0 });
+  const [historyPage, setHistoryPage] = useState(1);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState(null);
   const [rejectingId, setRejectingId] = useState(null);
   const [reason, setReason] = useState('');
 
-  function load() {
-    api.get('/pending').then(setItems).catch((err) => setError(err.message));
+  function loadPending() {
+    api
+      .get('/pending?status=pending')
+      .then((result) => setPending(result.entries))
+      .catch((err) => setError(err.message));
   }
 
-  useEffect(load, []);
+  function loadHistory(page = historyPage) {
+    api
+      .get(`/pending?status=history&page=${page}`)
+      .then(setHistory)
+      .catch((err) => setError(err.message));
+  }
+
+  useEffect(loadPending, []);
+  useEffect(() => loadHistory(historyPage), [historyPage]);
 
   async function handleApprove(id) {
     setBusyId(id);
     setError('');
     try {
       await api.post(`/pending/${id}/approve`);
-      load();
+      loadPending();
+      loadHistory(1);
+      setHistoryPage(1);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -43,7 +58,9 @@ export default function PendingApprovals() {
       await api.post(`/pending/${id}/reject`, { reason: reason.trim() });
       setRejectingId(null);
       setReason('');
-      load();
+      loadPending();
+      loadHistory(1);
+      setHistoryPage(1);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -51,8 +68,7 @@ export default function PendingApprovals() {
     }
   }
 
-  const pending = items.filter((i) => i.status === 'pending');
-  const reviewed = items.filter((i) => i.status !== 'pending');
+  const totalHistoryPages = Math.max(Math.ceil(history.total / history.page_size), 1);
 
   return (
     <Layout>
@@ -135,7 +151,7 @@ export default function PendingApprovals() {
             </tr>
           </thead>
           <tbody>
-            {reviewed.map((item) => (
+            {history.entries.map((item) => (
               <tr key={item.id}>
                 <td>{item.flat_number}</td>
                 <td>{item.resident_name}</td>
@@ -144,12 +160,20 @@ export default function PendingApprovals() {
                 <td className="dim">{item.reviewed_at ? new Date(item.reviewed_at).toLocaleDateString() : '—'}</td>
               </tr>
             ))}
-            {reviewed.length === 0 && (
+            {history.entries.length === 0 && (
               <tr><td colSpan={5} style={{ color: 'var(--ink-dim)' }}>No history yet.</td></tr>
             )}
           </tbody>
         </table>
       </div>
+
+      {history.total > history.page_size && (
+        <div style={{ display: 'flex', gap: 8, marginTop: 16, alignItems: 'center' }}>
+          <button className="btn" disabled={historyPage <= 1} onClick={() => setHistoryPage((p) => p - 1)}>Previous</button>
+          <span style={{ fontSize: 13, color: 'var(--ink-dim)' }}>Page {historyPage} of {totalHistoryPages}</span>
+          <button className="btn" disabled={historyPage >= totalHistoryPages} onClick={() => setHistoryPage((p) => p + 1)}>Next</button>
+        </div>
+      )}
     </Layout>
   );
 }

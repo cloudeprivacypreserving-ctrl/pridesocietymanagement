@@ -10,7 +10,18 @@ export default function MySubmissions() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api.get('/pending').then(setItems).catch((err) => setError(err.message));
+    // A single guard's own submission count is naturally small (unlike the
+    // admin-wide history), so it's fine to combine the always-full pending
+    // list with the first page of reviewed history into one chronological
+    // view here rather than paginating this page too.
+    Promise.all([api.get('/pending?status=pending'), api.get('/pending?status=history&page=1')])
+      .then(([pending, history]) => {
+        const combined = [...pending.entries, ...history.entries].sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        );
+        setItems(combined);
+      })
+      .catch((err) => setError(err.message));
   }, []);
 
   return (

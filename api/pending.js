@@ -25,33 +25,63 @@ module.exports = async function handler(req, res) {
   return fail(res, 404, 'Not found');
 };
 
+const HISTORY_PAGE_SIZE = 50;
+
 async function handleList(req, res) {
   const auth = await requireRole(req, res, ['admin', 'security']);
   if (!auth) return;
 
-  const { status } = req.query;
+  const { status, page } = req.query;
   const supabase = getSupabaseAdmin();
+
+  // The "pending" queue is the actionable work list — it's expected to
+  // stay small in practice and needs to be seen in full, so it's never
+  // paginated. Reviewed history (approved/rejected) has no natural
+  // ceiling — it accumulates forever — so that's the one paginated here.
+  if (status === 'pending') {
+    let query = supabase
+      .from('pending_approvals')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (auth.profile.role === 'security') {
+      query = query.eq('submitted_by', auth.profile.id);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error('List pending approvals failed:', error.message);
+      return fail(res, 500, 'Failed to fetch pending approvals');
+    }
+    return ok(res, { entries: data, page: 1, page_size: data.length, total: data.length });
+  }
+
+  // status === 'history' (or omitted, for backward compatibility — treated
+  // as history too) — paginated, most recent first.
+  const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+  const from = (pageNum - 1) * HISTORY_PAGE_SIZE;
+  const to = from + HISTORY_PAGE_SIZE - 1;
 
   let query = supabase
     .from('pending_approvals')
-    .select('*')
-    .order('created_at', { ascending: false });
+    .select('*', { count: 'exact' })
+    .neq('status', 'pending')
+    .order('reviewed_at', { ascending: false })
+    .range(from, to);
 
   if (auth.profile.role === 'security') {
     query = query.eq('submitted_by', auth.profile.id);
   }
-  if (status) {
-    query = query.eq('status', status);
-  }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query;
 
   if (error) {
-    console.error('List pending approvals failed:', error.message);
-    return fail(res, 500, 'Failed to fetch pending approvals');
+    console.error('List pending approval history failed:', error.message);
+    return fail(res, 500, 'Failed to fetch submission history');
   }
 
-  return ok(res, data);
+  return ok(res, { entries: data, page: pageNum, page_size: HISTORY_PAGE_SIZE, total: count || 0 });
 }
 
 async function handleSubmit(req, res) {

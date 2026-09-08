@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Layout from '../../components/Layout';
 import ResidentCard from '../../components/ResidentCard';
 import { api } from '../../lib/api';
@@ -17,44 +17,52 @@ const UnitIcon = (
 );
 
 export default function ResidentsList() {
-  const [residents, setResidents] = useState([]);
+  const [result, setResult] = useState({ entries: [], page: 1, page_size: 50, total: 0, counts: { all: 0, owner: 0, tenant: 0 } });
   const [q, setQ] = useState('');
   const [flat, setFlat] = useState('');
   const [filter, setFilter] = useState('all');
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  async function search() {
-    setLoading(true);
-    setError('');
-    try {
-      const params = new URLSearchParams();
-      if (q) params.set('q', q);
-      if (flat) params.set('flat', flat);
-      const data = await api.get(`/residents?${params.toString()}`);
-      setResidents(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  async function fetchResidents({ q, flat, filter, page: pageArg }) {
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (flat) params.set('flat', flat);
+    if (filter !== 'all') params.set('occupancy_type', filter);
+    params.set('page', String(pageArg));
+    return api.get(`/residents?${params.toString()}`);
   }
 
   useEffect(() => {
-    search();
+    setLoading(true);
+    setError('');
+    fetchResidents({ q, flat, filter, page })
+      .then(setResult)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [filter, page]);
 
-  const counts = useMemo(
-    () => ({
-      all: residents.length,
-      owner: residents.filter((r) => r.occupancy_type === 'owner').length,
-      tenant: residents.filter((r) => r.occupancy_type === 'tenant').length,
-    }),
-    [residents]
-  );
+  function handleSearchClick() {
+    if (page !== 1) {
+      setPage(1);
+    } else {
+      setLoading(true);
+      setError('');
+      fetchResidents({ q, flat, filter, page: 1 })
+        .then(setResult)
+        .catch((err) => setError(err.message))
+        .finally(() => setLoading(false));
+    }
+  }
 
-  const filtered = filter === 'all' ? residents : residents.filter((r) => r.occupancy_type === filter);
+  function handleFilterChange(next) {
+    setFilter(next);
+    setPage(1);
+  }
+
+  const totalPages = Math.max(Math.ceil(result.total / result.page_size), 1);
 
   return (
     <Layout>
@@ -62,7 +70,7 @@ export default function ResidentsList() {
         <div>
           <div className="directory-title-row">
             <h1>Residents directory</h1>
-            <span className="pill pill-approved">{counts.all} total</span>
+            <span className="pill pill-approved">{result.counts.all} total</span>
           </div>
           <div className="directory-subtitle">Active tower occupancy and resident records</div>
         </div>
@@ -77,18 +85,18 @@ export default function ResidentsList() {
           <span className="input-icon">{UnitIcon}</span>
           <input placeholder="e.g. A-101" value={flat} onChange={(e) => setFlat(e.target.value)} />
         </div>
-        <button className="btn btn-primary" onClick={search}>Search</button>
+        <button className="btn btn-primary" onClick={handleSearchClick}>Search</button>
       </div>
 
       <div className="filter-pills">
-        <button className={`filter-pill${filter === 'all' ? ' active' : ''}`} onClick={() => setFilter('all')}>
-          All ({counts.all})
+        <button className={`filter-pill${filter === 'all' ? ' active' : ''}`} onClick={() => handleFilterChange('all')}>
+          All ({result.counts.all})
         </button>
-        <button className={`filter-pill${filter === 'owner' ? ' active' : ''}`} onClick={() => setFilter('owner')}>
-          Owners ({counts.owner})
+        <button className={`filter-pill${filter === 'owner' ? ' active' : ''}`} onClick={() => handleFilterChange('owner')}>
+          Owners ({result.counts.owner})
         </button>
-        <button className={`filter-pill${filter === 'tenant' ? ' active' : ''}`} onClick={() => setFilter('tenant')}>
-          Tenants ({counts.tenant})
+        <button className={`filter-pill${filter === 'tenant' ? ' active' : ''}`} onClick={() => handleFilterChange('tenant')}>
+          Tenants ({result.counts.tenant})
         </button>
       </div>
 
@@ -96,14 +104,24 @@ export default function ResidentsList() {
       {loading ? (
         <div style={{ color: 'var(--ink-dim)' }}>Loading...</div>
       ) : (
-        <div className="resident-card-list">
-          {filtered.map((r) => (
-            <ResidentCard key={r.id} resident={r} linkTo={`/security/residents/${r.id}`} linkLabel="View" />
-          ))}
-          {filtered.length === 0 && (
-            <div style={{ color: 'var(--ink-dim)', padding: '20px 0' }}>No residents match.</div>
+        <>
+          <div className="resident-card-list">
+            {result.entries.map((r) => (
+              <ResidentCard key={r.id} resident={r} linkTo={`/security/residents/${r.id}`} linkLabel="View" />
+            ))}
+            {result.entries.length === 0 && (
+              <div style={{ color: 'var(--ink-dim)', padding: '20px 0' }}>No residents match.</div>
+            )}
+          </div>
+
+          {result.total > result.page_size && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 20, alignItems: 'center' }}>
+              <button className="btn" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Previous</button>
+              <span style={{ fontSize: 13, color: 'var(--ink-dim)' }}>Page {page} of {totalPages}</span>
+              <button className="btn" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Next</button>
+            </div>
           )}
-        </div>
+        </>
       )}
     </Layout>
   );
