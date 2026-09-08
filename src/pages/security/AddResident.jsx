@@ -15,7 +15,13 @@ export default function AddResident() {
 
   return (
     <Layout>
-      <h1>Add resident</h1>
+      <div className="form-page-header">
+        <span className="eyebrow">
+          <span className="eyebrow-dot" /> Submission for review
+        </span>
+        <h1>Add new resident</h1>
+        <div className="directory-subtitle">Submitted residents go to Admin for approval before appearing in the directory</div>
+      </div>
       {done ? (
         <div className="card" style={{ maxWidth: 480 }}>
           <p>Submitted for Admin approval.</p>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Layout from '../../components/Layout';
 import { api } from '../../lib/api';
+import { ClipboardList } from '../../components/icons';
 
 const PILL = { pending: 'pill-pending', approved: 'pill-approved', rejected: 'pill-rejected' };
 
@@ -14,7 +15,11 @@ export default function MySubmissions() {
 
   return (
     <Layout>
-      <div className="top-bar"><h1>My submissions</h1></div>
+      <div className="form-page-header">
+        <span className="eyebrow">{ClipboardList} My submissions</span>
+        <h1>Submission status</h1>
+        <div className="directory-subtitle">Track residents you've submitted for Admin approval</div>
+      </div>
       {error && <div className="error-text">{error}</div>}
       <div className="table-wrap">
         <table>

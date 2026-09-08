@@ -5,6 +5,7 @@ import ResidentPhoto from '../../components/ResidentPhoto';
 import ResidentForm from '../../components/ResidentForm';
 import VehiclesSection from '../../components/VehiclesSection';
 import { api } from '../../lib/api';
+import { ArrowLeft, Pencil, Trash, Home, Phone, Mail, Calendar } from '../../components/icons';
 
 export default function ResidentDetail() {
   const { id } = useParams();
@@ -38,7 +39,9 @@ export default function ResidentDetail() {
 
   return (
     <Layout>
-      <Link to="/admin/residents">&larr; Back to residents</Link>
+      <Link to="/admin/residents" className="back-link">
+        <span className="back-link-icon">{ArrowLeft}</span> Back to residents
+      </Link>
 
       {editing ? (
         <>
@@ -56,19 +59,25 @@ export default function ResidentDetail() {
               )}
             </h1>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn" onClick={() => setEditing(true)}>Edit</button>
-              <button className="btn btn-danger" onClick={handleDelete}>Delete</button>
+              <button className="btn" onClick={() => setEditing(true)}>
+                <span className="btn-icon">{Pencil}</span> Edit
+              </button>
+              <button className="btn btn-danger" onClick={handleDelete}>
+                <span className="btn-icon">{Trash}</span> Delete
+              </button>
             </div>
           </div>
           <div className="card" style={{ display: 'flex', gap: 24, maxWidth: 560 }}>
             <ResidentPhoto path={resident.photo_path} alt={resident.resident_name} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14 }}>
-              <div><strong>Flat:</strong> {resident.flat_number}</div>
-              <div><strong>Type:</strong> <span style={{ textTransform: 'capitalize' }}>{resident.occupancy_type}</span></div>
-              <div><strong>Phone:</strong> {resident.phone}</div>
-              <div><strong>Email:</strong> {resident.email || '—'}</div>
+            <div className="detail-list">
+              <div className="detail-row"><span className="detail-icon">{Home}</span> {resident.flat_number}</div>
+              <div className="detail-row">
+                <span className="pill pill-approved" style={{ marginLeft: 20 }}>{resident.occupancy_type}</span>
+              </div>
+              <div className="detail-row"><span className="detail-icon">{Phone}</span> {resident.phone}</div>
+              <div className="detail-row"><span className="detail-icon">{Mail}</span> {resident.email || '—'}</div>
               {resident.occupancy_type === 'tenant' && (
-                <div><strong>Lease expiry:</strong> {resident.lease_expiry_date || '—'}</div>
+                <div className="detail-row"><span className="detail-icon">{Calendar}</span> Lease expiry: {resident.lease_expiry_date || '—'}</div>
               )}
               <div style={{ color: 'var(--ink-dim)', fontSize: 12, marginTop: 8 }}>
                 Added {new Date(resident.created_at).toLocaleDateString()}

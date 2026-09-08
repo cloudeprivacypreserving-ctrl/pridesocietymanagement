@@ -13,7 +13,13 @@ export default function AddResident() {
 
   return (
     <Layout>
-      <h1>Add resident</h1>
+      <div className="form-page-header">
+        <span className="eyebrow">
+          <span className="eyebrow-dot" /> Direct entry
+        </span>
+        <h1>Add new resident</h1>
+        <div className="directory-subtitle">Adds directly to the active resident registry</div>
+      </div>
       <ResidentForm onSubmit={handleSubmit} submitLabel="Add resident" showAdminFields />
     </Layout>
   );

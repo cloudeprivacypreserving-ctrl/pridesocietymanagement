@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import { Car, Trash } from './icons';
 
 export default function VehiclesSection({ residentId }) {
   const [vehicles, setVehicles] = useState([]);
@@ -49,7 +50,9 @@ export default function VehiclesSection({ residentId }) {
 
   return (
     <div className="card" style={{ marginTop: 20 }}>
-      <h2>Vehicles</h2>
+      <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span className="detail-icon" style={{ color: 'var(--accent)' }}>{Car}</span> Vehicles
+      </h2>
       {error && <div className="error-text">{error}</div>}
 
       {loading ? (
@@ -65,18 +68,19 @@ export default function VehiclesSection({ residentId }) {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                padding: '8px 12px',
+                padding: '10px 14px',
                 border: '1px solid var(--line)',
-                borderRadius: 6,
+                borderRadius: 'var(--radius-sm)',
                 fontSize: 13.5,
               }}
             >
-              <span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="detail-icon">{Car}</span>
                 <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>{v.plate_number}</span>
                 {v.vehicle_type && <span style={{ color: 'var(--ink-dim)' }}> · {v.vehicle_type}</span>}
               </span>
               <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: 12.5 }} onClick={() => handleRemove(v.id)}>
-                Remove
+                <span className="btn-icon">{Trash}</span> Remove
               </button>
             </div>
           ))}

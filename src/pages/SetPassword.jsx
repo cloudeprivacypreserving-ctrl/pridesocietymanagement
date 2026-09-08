@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import sohoLogo from '../assets/soho-logo.png';
+import { Lock } from '../components/icons';
 
 export default function SetPassword() {
   const { completePasswordSetup } = useAuth();
@@ -36,24 +38,40 @@ export default function SetPassword() {
 
   return (
     <div className="auth-page">
-      <form className="card auth-card" onSubmit={handleSubmit}>
-        <h2 style={{ marginTop: 0 }}>Set your password</h2>
-        <p style={{ fontSize: 13, color: 'var(--ink-dim)' }}>
-          You've been invited to Society Entry Management. Choose a password to finish setting up your account.
-        </p>
-        <div className="form-row">
-          <label htmlFor="password">New password (min. 10 characters)</label>
-          <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+      <div className="terminal-frame">
+        <div className="terminal-screen">
+          <div className="terminal-brand">
+            <img className="brand-mark" src={sohoLogo} alt="SOHO" style={{ width: 44, height: 44, borderRadius: 12 }} />
+            <div>
+              <div className="terminal-brand-title">
+                <span className="input-icon" style={{ position: 'static', transform: 'none', width: 18, height: 18 }}>{Lock}</span>
+                Set your password
+              </div>
+              <div className="terminal-brand-sub">One-time account setup</div>
+            </div>
+          </div>
+
+          <div className="terminal-notice">
+            You've been invited to Society Entry. Choose a password to finish setting up your account.
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div className="form-row">
+              <label htmlFor="password">New password (min. 10 characters)</label>
+              <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </div>
+            <div className="form-row">
+              <label htmlFor="confirm">Confirm password</label>
+              <input id="confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
+            </div>
+            {error && <div className="error-text">{error}</div>}
+            <button className="btn btn-primary" type="submit" disabled={submitting} style={{ width: '100%', marginTop: 4 }}>
+              {submitting ? 'Saving...' : 'Set password'}
+            </button>
+          </form>
         </div>
-        <div className="form-row">
-          <label htmlFor="confirm">Confirm password</label>
-          <input id="confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
-        </div>
-        {error && <div className="error-text">{error}</div>}
-        <button className="btn btn-primary" type="submit" disabled={submitting} style={{ width: '100%' }}>
-          {submitting ? 'Saving...' : 'Set password'}
-        </button>
-      </form>
+        <div className="terminal-footer">Society Entry Management System</div>
+      </div>
     </div>
   );
 }

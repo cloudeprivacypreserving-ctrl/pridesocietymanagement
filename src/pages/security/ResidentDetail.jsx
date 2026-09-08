@@ -4,6 +4,7 @@ import Layout from '../../components/Layout';
 import ResidentPhoto from '../../components/ResidentPhoto';
 import VehiclesSection from '../../components/VehiclesSection';
 import { api } from '../../lib/api';
+import { ArrowLeft, Home, Phone, Mail, Calendar } from '../../components/icons';
 
 export default function ResidentDetail() {
   const { id } = useParams();
@@ -19,7 +20,9 @@ export default function ResidentDetail() {
 
   return (
     <Layout>
-      <Link to="/security/residents">&larr; Back to residents</Link>
+      <Link to="/security/residents" className="back-link">
+        <span className="back-link-icon">{ArrowLeft}</span> Back to residents
+      </Link>
       <h1>
         {resident.resident_name}
         {resident.is_council_member && (
@@ -28,13 +31,15 @@ export default function ResidentDetail() {
       </h1>
       <div className="card" style={{ display: 'flex', gap: 24, maxWidth: 560 }}>
         <ResidentPhoto path={resident.photo_path} alt={resident.resident_name} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14 }}>
-          <div><strong>Flat:</strong> {resident.flat_number}</div>
-          <div><strong>Type:</strong> <span style={{ textTransform: 'capitalize' }}>{resident.occupancy_type}</span></div>
-          <div><strong>Phone:</strong> {resident.phone}</div>
-          <div><strong>Email:</strong> {resident.email || '—'}</div>
+        <div className="detail-list">
+          <div className="detail-row"><span className="detail-icon">{Home}</span> {resident.flat_number}</div>
+          <div className="detail-row">
+            <span className="pill pill-approved" style={{ marginLeft: 20 }}>{resident.occupancy_type}</span>
+          </div>
+          <div className="detail-row"><span className="detail-icon">{Phone}</span> {resident.phone}</div>
+          <div className="detail-row"><span className="detail-icon">{Mail}</span> {resident.email || '—'}</div>
           {resident.occupancy_type === 'tenant' && (
-            <div><strong>Lease expiry:</strong> {resident.lease_expiry_date || '—'}</div>
+            <div className="detail-row"><span className="detail-icon">{Calendar}</span> Lease expiry: {resident.lease_expiry_date || '—'}</div>
           )}
         </div>
       </div>

@@ -55,6 +55,21 @@ async function handleList(req, res) {
     return fail(res, 500, 'Failed to fetch residents');
   }
 
+  if (data.length > 0) {
+    const { data: vehicles } = await supabase
+      .from('vehicles')
+      .select('resident_id')
+      .in('resident_id', data.map((r) => r.id));
+
+    const counts = {};
+    (vehicles || []).forEach((v) => {
+      counts[v.resident_id] = (counts[v.resident_id] || 0) + 1;
+    });
+    data.forEach((r) => {
+      r.vehicle_count = counts[r.id] || 0;
+    });
+  }
+
   return ok(res, data);
 }
 
