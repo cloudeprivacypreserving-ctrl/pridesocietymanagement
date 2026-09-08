@@ -1,9 +1,20 @@
 import { supabase } from './supabaseClient';
 
 async function authHeaders() {
-  const { data } = await supabase.auth.getSession();
-  const token = data?.session?.access_token;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    const token = data?.session?.access_token;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch (err) {
+    // supabase-js can throw (rather than return a null session) if its
+    // local session state is corrupted or stale — treat that the same as
+    // "not signed in" instead of letting a raw client error surface. The
+    // request will then get a 401 from the API and route through the
+    // normal not-authenticated handling.
+    console.error('Failed to read auth session:', err.message);
+    return {};
+  }
 }
 
 async function request(path, options = {}) {
@@ -21,6 +32,17 @@ async function request(path, options = {}) {
     const err = new Error(message);
     err.status = res.status;
     err.field = body?.error?.field;
+
+    if (res.status === 401) {
+      // The session is missing, expired, or otherwise invalid — clear it
+      // and send the user back to a clean login page instead of leaving
+      // them on the current page with a confusing "not authenticated"
+      // error to read.
+      supabase.auth.signOut().finally(() => {
+        window.location.href = '/login';
+      });
+    }
+
     throw err;
   }
 

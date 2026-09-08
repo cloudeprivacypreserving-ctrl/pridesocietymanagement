@@ -1,13 +1,24 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { api } from '../lib/api';
 
 const AuthContext = createContext(null);
 
+// Security accounts get a hard 10-hour session ceiling from login,
+// regardless of activity — matches a single-shift security policy.
+// Supabase's own session handling is a rolling refresh (no fixed
+// "log out N hours after login" concept), so this is enforced by the
+// app: the login time is recorded in localStorage (survives reloads)
+// and checked on load and periodically while the tab is open.
+const SECURITY_SESSION_LIMIT_MS = 10 * 60 * 60 * 1000;
+const SESSION_START_KEY = 'security_session_started_at';
+const CHECK_INTERVAL_MS = 60 * 1000;
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const signOutRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -26,6 +37,7 @@ export function AuthProvider({ children }) {
       } else {
         setProfile(null);
         setLoading(false);
+        localStorage.removeItem(SESSION_START_KEY);
       }
     });
 
@@ -34,6 +46,28 @@ export function AuthProvider({ children }) {
       sub.subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (!session || profile?.role !== 'security') return;
+
+    // Record the start of this session the first time we see a Security
+    // user with an active session (covers both a fresh sign-in and a
+    // page reload of an already-open session).
+    if (!localStorage.getItem(SESSION_START_KEY)) {
+      localStorage.setItem(SESSION_START_KEY, String(Date.now()));
+    }
+
+    function checkExpiry() {
+      const startedAt = Number(localStorage.getItem(SESSION_START_KEY));
+      if (startedAt && Date.now() - startedAt >= SECURITY_SESSION_LIMIT_MS) {
+        signOutRef.current?.();
+      }
+    }
+
+    checkExpiry();
+    const interval = setInterval(checkExpiry, CHECK_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [session, profile]);
 
   async function loadProfile(userId) {
     const { data } = await supabase
@@ -51,8 +85,11 @@ export function AuthProvider({ children }) {
   }
 
   async function signOut() {
+    localStorage.removeItem(SESSION_START_KEY);
     await supabase.auth.signOut();
   }
+
+  signOutRef.current = signOut;
 
   async function completePasswordSetup(password) {
     const { error } = await supabase.auth.updateUser({ password });
