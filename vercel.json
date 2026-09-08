@@ -3,6 +3,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/api/residents/:id", "destination": "/api/residents" },
+    { "source": "/api/pending/:id/:action", "destination": "/api/pending" },
+    { "source": "/api/vehicles/:id", "destination": "/api/vehicles" },
+    { "source": "/api/photos/:action", "destination": "/api/photos" },
+    { "source": "/api/profile/:action", "destination": "/api/profile" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

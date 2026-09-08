@@ -1,7 +1,7 @@
-const { getSupabaseAdmin } = require('../_lib/supabaseAdmin');
-const { requireRole } = require('../_lib/auth');
-const { writeAuditLog } = require('../_lib/audit');
-const { ok, fail } = require('../_lib/responses');
+const { getSupabaseAdmin } = require('./_lib/supabaseAdmin');
+const { requireRole } = require('./_lib/auth');
+const { writeAuditLog } = require('./_lib/audit');
+const { ok, fail } = require('./_lib/responses');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {

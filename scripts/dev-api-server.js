@@ -1,38 +1,31 @@
 // Minimal local API server for development, standing in for Vercel's
 // serverless routing (vercel dev is unreliable on this machine due to a
 // yarn/build-detection issue on the linked project). Not used in production
-// — Vercel handles routing there via the api/ folder convention.
+// — Vercel handles routing there via the api/ folder + vercel.json rewrites.
+//
+// Mirrors production routing: each consolidated function parses the id/
+// action itself from req.url, same as it would on Vercel.
 require('dotenv').config();
 const http = require('http');
 const { URL } = require('url');
 
 const routes = [
-  { method: 'GET', pattern: /^\/api\/health$/, handler: () => require('../api/health'), params: [] },
-  { method: 'POST', pattern: /^\/api\/users$/, handler: () => require('../api/users/index'), params: [] },
-  { method: 'GET', pattern: /^\/api\/residents$/, handler: () => require('../api/residents/index'), params: [] },
-  { method: 'POST', pattern: /^\/api\/residents$/, handler: () => require('../api/residents/index'), params: [] },
-  { method: 'GET', pattern: /^\/api\/residents\/([^/]+)$/, handler: () => require('../api/residents/[id]'), params: ['id'] },
-  { method: 'PATCH', pattern: /^\/api\/residents\/([^/]+)$/, handler: () => require('../api/residents/[id]'), params: ['id'] },
-  { method: 'DELETE', pattern: /^\/api\/residents\/([^/]+)$/, handler: () => require('../api/residents/[id]'), params: ['id'] },
-  { method: 'GET', pattern: /^\/api\/pending$/, handler: () => require('../api/pending/index'), params: [] },
-  { method: 'POST', pattern: /^\/api\/pending$/, handler: () => require('../api/pending/index'), params: [] },
-  { method: 'POST', pattern: /^\/api\/pending\/([^/]+)\/approve$/, handler: () => require('../api/pending/[id]/approve'), params: ['id'] },
-  { method: 'POST', pattern: /^\/api\/pending\/([^/]+)\/reject$/, handler: () => require('../api/pending/[id]/reject'), params: ['id'] },
-  { method: 'GET', pattern: /^\/api\/dashboard$/, handler: () => require('../api/dashboard'), params: [] },
-  { method: 'GET', pattern: /^\/api\/audit-log$/, handler: () => require('../api/audit-log'), params: [] },
-  { method: 'POST', pattern: /^\/api\/photos\/upload-url$/, handler: () => require('../api/photos/upload-url'), params: [] },
-  { method: 'POST', pattern: /^\/api\/photos\/signed-url$/, handler: () => require('../api/photos/signed-url'), params: [] },
-  { method: 'POST', pattern: /^\/api\/profile\/complete-setup$/, handler: () => require('../api/profile/complete-setup'), params: [] },
-  { method: 'GET', pattern: /^\/api\/vehicles$/, handler: () => require('../api/vehicles/index'), params: [] },
-  { method: 'POST', pattern: /^\/api\/vehicles$/, handler: () => require('../api/vehicles/index'), params: [] },
-  { method: 'DELETE', pattern: /^\/api\/vehicles\/([^/]+)$/, handler: () => require('../api/vehicles/[id]'), params: ['id'] },
+  { prefix: '/api/health', handler: () => require('../api/health') },
+  { prefix: '/api/users', handler: () => require('../api/users') },
+  { prefix: '/api/residents', handler: () => require('../api/residents') },
+  { prefix: '/api/pending', handler: () => require('../api/pending') },
+  { prefix: '/api/dashboard', handler: () => require('../api/dashboard') },
+  { prefix: '/api/audit-log', handler: () => require('../api/audit-log') },
+  { prefix: '/api/photos', handler: () => require('../api/photos') },
+  { prefix: '/api/profile', handler: () => require('../api/profile') },
+  { prefix: '/api/vehicles', handler: () => require('../api/vehicles') },
 ];
 
 const PORT = 3000;
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
-  const route = routes.find((r) => r.method === req.method && r.pattern.test(url.pathname));
+  const route = routes.find((r) => url.pathname === r.prefix || url.pathname.startsWith(`${r.prefix}/`));
 
   if (!route) {
     res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -40,11 +33,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const match = url.pathname.match(route.pattern);
   const query = Object.fromEntries(url.searchParams.entries());
-  route.params.forEach((name, i) => {
-    query[name] = match[i + 1];
-  });
 
   let body = '';
   req.on('data', (chunk) => { body += chunk; });

@@ -1,11 +1,23 @@
-const { getSupabaseAdmin } = require('../_lib/supabaseAdmin');
-const { requireRole } = require('../_lib/auth');
-const { writeAuditLog } = require('../_lib/audit');
-const { ok, fail } = require('../_lib/responses');
+const { getSupabaseAdmin } = require('./_lib/supabaseAdmin');
+const { requireRole } = require('./_lib/auth');
+const { writeAuditLog } = require('./_lib/audit');
+const { ok, fail } = require('./_lib/responses');
 
+// Handles /api/vehicles (list, create) and /api/vehicles/:id (delete)
+// in one function to stay under Vercel Hobby's per-deployment function
+// limit.
 module.exports = async function handler(req, res) {
-  if (req.method === 'GET') return handleList(req, res);
-  if (req.method === 'POST') return handleCreate(req, res);
+  const url = new URL(req.url, 'http://localhost');
+  const segments = url.pathname.replace(/^\/api\/vehicles\/?/, '').split('/').filter(Boolean);
+  const id = segments[0];
+
+  if (!id) {
+    if (req.method === 'GET') return handleList(req, res);
+    if (req.method === 'POST') return handleCreate(req, res);
+    return fail(res, 405, 'Method not allowed');
+  }
+
+  if (req.method === 'DELETE') return handleDelete(req, res, id);
   return fail(res, 405, 'Method not allowed');
 };
 
@@ -82,4 +94,26 @@ async function handleCreate(req, res) {
   });
 
   return ok(res, data, 201);
+}
+
+async function handleDelete(req, res, id) {
+  const auth = await requireRole(req, res, ['admin', 'security']);
+  if (!auth) return;
+
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase.from('vehicles').delete().eq('id', id).select().single();
+
+  if (error || !data) {
+    return fail(res, 404, 'Vehicle not found');
+  }
+
+  await writeAuditLog({
+    actorId: auth.profile.id,
+    action: 'vehicle_removed',
+    targetTable: 'vehicles',
+    targetId: id,
+    details: { resident_id: data.resident_id, plate_number: data.plate_number },
+  });
+
+  return ok(res, { id });
 }
