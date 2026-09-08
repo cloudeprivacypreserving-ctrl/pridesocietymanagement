@@ -168,7 +168,11 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
   }
 
   const unitNum = parseInt(unit, 10);
-  const unitValid = unit === '' || (unitNum >= 101 && unitNum <= 2307 && unit.length >= 3);
+  const unitFloor = Math.floor(unitNum / 100);
+  const unitPosition = unitNum % 100;
+  const unitValid =
+    unit === '' ||
+    (unit.length >= 3 && unitFloor >= 1 && unitFloor <= 23 && unitPosition >= 1 && unitPosition <= 8);
   const phoneTouched = phone.length > 0;
   const phoneValid = !phoneTouched || isLikelyValidPhone(phone);
 
@@ -201,8 +205,10 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
             />
           </div>
         </div>
-        <div style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>
-          Unit number between 101 and 2307.
+        <div style={{ fontSize: 12, color: unitValid ? 'var(--ink-dim)' : 'var(--danger)', marginTop: 4 }}>
+          {unitValid
+            ? 'Floors 1–23, units 01–08 per floor (e.g. 101–108, 2301–2308).'
+            : 'Not a valid unit — floors 1–23 only have units 01–08.'}
         </div>
       </div>
 
