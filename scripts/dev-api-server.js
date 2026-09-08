@@ -22,6 +22,7 @@ const routes = [
   { method: 'GET', pattern: /^\/api\/audit-log$/, handler: () => require('../api/audit-log'), params: [] },
   { method: 'POST', pattern: /^\/api\/photos\/upload-url$/, handler: () => require('../api/photos/upload-url'), params: [] },
   { method: 'POST', pattern: /^\/api\/photos\/signed-url$/, handler: () => require('../api/photos/signed-url'), params: [] },
+  { method: 'POST', pattern: /^\/api\/profile\/complete-setup$/, handler: () => require('../api/profile/complete-setup'), params: [] },
 ];
 
 const PORT = 3000;

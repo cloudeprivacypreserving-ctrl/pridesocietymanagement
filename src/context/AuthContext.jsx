@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { api } from '../lib/api';
 
 const AuthContext = createContext(null);
 
@@ -57,10 +58,8 @@ export function AuthProvider({ children }) {
     const { error } = await supabase.auth.updateUser({ password });
     if (error) throw error;
 
-    if (session) {
-      await supabase.from('profiles').update({ must_change_password: false }).eq('id', session.user.id);
-      setProfile((prev) => (prev ? { ...prev, must_change_password: false } : prev));
-    }
+    await api.post('/profile/complete-setup');
+    setProfile((prev) => (prev ? { ...prev, must_change_password: false } : prev));
   }
 
   const value = { session, profile, loading, signIn, signOut, completePasswordSetup };
