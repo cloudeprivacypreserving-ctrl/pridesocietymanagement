@@ -14,7 +14,7 @@ export default function AddResident() {
   return (
     <Layout>
       <h1>Add resident</h1>
-      <ResidentForm onSubmit={handleSubmit} submitLabel="Add resident" />
+      <ResidentForm onSubmit={handleSubmit} submitLabel="Add resident" showAdminFields />
     </Layout>
   );
 }

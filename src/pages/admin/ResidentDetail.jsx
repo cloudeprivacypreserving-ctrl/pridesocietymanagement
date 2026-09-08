@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import ResidentPhoto from '../../components/ResidentPhoto';
 import ResidentForm from '../../components/ResidentForm';
+import VehiclesSection from '../../components/VehiclesSection';
 import { api } from '../../lib/api';
 
 export default function ResidentDetail() {
@@ -42,13 +43,18 @@ export default function ResidentDetail() {
       {editing ? (
         <>
           <h1>Edit resident</h1>
-          <ResidentForm initial={resident} onSubmit={handleUpdate} submitLabel="Save changes" />
+          <ResidentForm initial={resident} onSubmit={handleUpdate} submitLabel="Save changes" showAdminFields />
           <button className="btn" style={{ marginTop: 10 }} onClick={() => setEditing(false)}>Cancel</button>
         </>
       ) : (
         <>
           <div className="top-bar">
-            <h1 style={{ margin: 0 }}>{resident.resident_name}</h1>
+            <h1 style={{ margin: 0 }}>
+              {resident.resident_name}
+              {resident.is_council_member && (
+                <span className="pill pill-approved" style={{ marginLeft: 10, verticalAlign: 'middle' }}>Council member</span>
+              )}
+            </h1>
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn" onClick={() => setEditing(true)}>Edit</button>
               <button className="btn btn-danger" onClick={handleDelete}>Delete</button>
@@ -61,11 +67,16 @@ export default function ResidentDetail() {
               <div><strong>Type:</strong> <span style={{ textTransform: 'capitalize' }}>{resident.occupancy_type}</span></div>
               <div><strong>Phone:</strong> {resident.phone}</div>
               <div><strong>Email:</strong> {resident.email || '—'}</div>
+              {resident.occupancy_type === 'tenant' && (
+                <div><strong>Lease expiry:</strong> {resident.lease_expiry_date || '—'}</div>
+              )}
               <div style={{ color: 'var(--ink-dim)', fontSize: 12, marginTop: 8 }}>
                 Added {new Date(resident.created_at).toLocaleDateString()}
               </div>
             </div>
           </div>
+
+          <VehiclesSection residentId={resident.id} />
         </>
       )}
     </Layout>

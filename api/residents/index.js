@@ -20,7 +20,9 @@ async function handleList(req, res) {
 
   let query = supabase
     .from('residents')
-    .select('id, flat_number, occupancy_type, resident_name, phone, email, photo_path, status, created_at')
+    .select(
+      'id, flat_number, occupancy_type, resident_name, phone, email, photo_path, status, is_council_member, lease_expiry_date, created_at'
+    )
     .eq('status', 'active')
     .order('flat_number', { ascending: true });
 
@@ -45,13 +47,25 @@ async function handleCreate(req, res) {
   const auth = await requireRole(req, res, ['admin']);
   if (!auth) return;
 
-  const { flat_number, occupancy_type, resident_name, phone, email, photo_path } = req.body || {};
+  const {
+    flat_number,
+    occupancy_type,
+    resident_name,
+    phone,
+    email,
+    photo_path,
+    is_council_member,
+    lease_expiry_date,
+  } = req.body || {};
 
   if (!flat_number || !occupancy_type || !resident_name || !phone) {
     return fail(res, 400, 'flat_number, occupancy_type, resident_name, and phone are required');
   }
   if (!['owner', 'tenant'].includes(occupancy_type)) {
     return fail(res, 400, 'occupancy_type must be owner or tenant', 'occupancy_type');
+  }
+  if (lease_expiry_date && occupancy_type !== 'tenant') {
+    return fail(res, 400, 'lease_expiry_date only applies to tenants', 'lease_expiry_date');
   }
 
   let normalizedFlat;
@@ -79,6 +93,8 @@ async function handleCreate(req, res) {
       phone: normalizedPhone,
       email: email || null,
       photo_path: photo_path || null,
+      is_council_member: !!is_council_member,
+      lease_expiry_date: lease_expiry_date || null,
       created_by: auth.profile.id,
       approved_by: auth.profile.id,
     })

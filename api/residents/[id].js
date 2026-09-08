@@ -33,10 +33,22 @@ async function handleUpdate(req, res, id) {
   const auth = await requireRole(req, res, ['admin']);
   if (!auth) return;
 
-  const { flat_number, occupancy_type, resident_name, phone, email, photo_path } = req.body || {};
+  const {
+    flat_number,
+    occupancy_type,
+    resident_name,
+    phone,
+    email,
+    photo_path,
+    is_council_member,
+    lease_expiry_date,
+  } = req.body || {};
 
   if (occupancy_type && !['owner', 'tenant'].includes(occupancy_type)) {
     return fail(res, 400, 'occupancy_type must be owner or tenant', 'occupancy_type');
+  }
+  if (lease_expiry_date && occupancy_type === 'owner') {
+    return fail(res, 400, 'lease_expiry_date only applies to tenants', 'lease_expiry_date');
   }
 
   const updates = {};
@@ -58,6 +70,8 @@ async function handleUpdate(req, res, id) {
   }
   if (email !== undefined) updates.email = email;
   if (photo_path !== undefined) updates.photo_path = photo_path;
+  if (is_council_member !== undefined) updates.is_council_member = !!is_council_member;
+  if (lease_expiry_date !== undefined) updates.lease_expiry_date = lease_expiry_date || null;
 
   if (Object.keys(updates).length === 0) {
     return fail(res, 400, 'No fields to update');

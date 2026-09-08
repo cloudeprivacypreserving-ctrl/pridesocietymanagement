@@ -23,6 +23,9 @@ const routes = [
   { method: 'POST', pattern: /^\/api\/photos\/upload-url$/, handler: () => require('../api/photos/upload-url'), params: [] },
   { method: 'POST', pattern: /^\/api\/photos\/signed-url$/, handler: () => require('../api/photos/signed-url'), params: [] },
   { method: 'POST', pattern: /^\/api\/profile\/complete-setup$/, handler: () => require('../api/profile/complete-setup'), params: [] },
+  { method: 'GET', pattern: /^\/api\/vehicles$/, handler: () => require('../api/vehicles/index'), params: [] },
+  { method: 'POST', pattern: /^\/api\/vehicles$/, handler: () => require('../api/vehicles/index'), params: [] },
+  { method: 'DELETE', pattern: /^\/api\/vehicles\/([^/]+)$/, handler: () => require('../api/vehicles/[id]'), params: ['id'] },
 ];
 
 const PORT = 3000;

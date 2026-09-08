@@ -12,7 +12,7 @@ function splitFlatNumber(flatNumber) {
   return match ? { tower: match[1], unit: match[2] } : { tower: 'A', unit: '' };
 }
 
-export default function ResidentForm({ initial, onSubmit, submitLabel }) {
+export default function ResidentForm({ initial, onSubmit, submitLabel, showAdminFields = false }) {
   const initialFlat = splitFlatNumber(initial?.flat_number);
   const [tower, setTower] = useState(initialFlat.tower);
   const [unit, setUnit] = useState(initialFlat.unit);
@@ -21,6 +21,8 @@ export default function ResidentForm({ initial, onSubmit, submitLabel }) {
   const [phone, setPhone] = useState(initial?.phone || '');
   const [email, setEmail] = useState(initial?.email || '');
   const [photoPath, setPhotoPath] = useState(initial?.photo_path || null);
+  const [isCouncilMember, setIsCouncilMember] = useState(!!initial?.is_council_member);
+  const [leaseExpiryDate, setLeaseExpiryDate] = useState(initial?.lease_expiry_date || '');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -87,14 +89,19 @@ export default function ResidentForm({ initial, onSubmit, submitLabel }) {
 
     setSubmitting(true);
     try {
-      await onSubmit({
+      const payload = {
         flat_number: normalizedFlat,
         occupancy_type: occupancyType,
         resident_name: residentName.trim(),
         phone: normalizedPhone,
         email: email.trim() || null,
         photo_path: photoPath,
-      });
+      };
+      if (showAdminFields) {
+        payload.is_council_member = isCouncilMember;
+        payload.lease_expiry_date = occupancyType === 'tenant' ? leaseExpiryDate || null : null;
+      }
+      await onSubmit(payload);
     } catch (err) {
       setError(err.message || 'Something went wrong');
     } finally {
@@ -139,6 +146,32 @@ export default function ResidentForm({ initial, onSubmit, submitLabel }) {
           <option value="tenant">Tenant</option>
         </select>
       </div>
+
+      {showAdminFields && occupancyType === 'tenant' && (
+        <div className="form-row">
+          <label htmlFor="lease_expiry">Lease expiry date</label>
+          <input
+            id="lease_expiry"
+            type="date"
+            value={leaseExpiryDate}
+            onChange={(e) => setLeaseExpiryDate(e.target.value)}
+          />
+        </div>
+      )}
+
+      {showAdminFields && (
+        <div className="form-row">
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              style={{ width: 'auto' }}
+              checked={isCouncilMember}
+              onChange={(e) => setIsCouncilMember(e.target.checked)}
+            />
+            Council member
+          </label>
+        </div>
+      )}
 
       <div className="form-row">
         <label htmlFor="resident_name">Resident name</label>
