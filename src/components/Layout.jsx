@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import sohoLogo from '../assets/soho-logo.png';
 
@@ -83,7 +83,7 @@ export default function Layout({ children }) {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div className="topbar-brand">
+        <Link to={links[0].to} className="topbar-brand" aria-label="Go to home">
           <img className="brand-mark" src={sohoLogo} alt="SOHO" />
           <div>
             <div className="topbar-title">
@@ -91,7 +91,7 @@ export default function Layout({ children }) {
             </div>
             <div className="topbar-subtitle">{activeLink?.label || ''}</div>
           </div>
-        </div>
+        </Link>
         <div className="topbar-user">
           <div className="topbar-user-info">
             <span className="topbar-user-name">{profile?.full_name}</span>

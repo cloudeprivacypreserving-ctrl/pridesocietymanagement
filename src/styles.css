@@ -159,7 +159,8 @@ input::placeholder { color: var(--ink-faint); }
   padding: 12px 24px;
   flex-shrink: 0;
 }
-.topbar-brand { display: flex; align-items: center; gap: 12px; }
+.topbar-brand { display: flex; align-items: center; gap: 12px; color: inherit; }
+.topbar-brand:hover { text-decoration: none; opacity: 0.85; }
 .brand-mark {
   width: 34px;
   height: 34px;
