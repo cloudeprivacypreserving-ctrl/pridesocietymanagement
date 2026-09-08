@@ -7,6 +7,7 @@ export default function ProtectedRoute({ allowedRoles, children }) {
   if (loading) return <div className="main">Loading...</div>;
   if (!session) return <Navigate to="/login" replace />;
   if (!profile) return <div className="main">No profile found for this account. Contact an Admin.</div>;
+  if (profile.must_change_password) return <Navigate to="/set-password" replace />;
   if (allowedRoles && !allowedRoles.includes(profile.role)) {
     return <Navigate to={profile.role === 'admin' ? '/admin/dashboard' : '/security/residents'} replace />;
   }

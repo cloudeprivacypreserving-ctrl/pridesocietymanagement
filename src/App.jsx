@@ -22,6 +22,7 @@ function Home() {
   const { profile, loading } = useAuth();
   if (loading) return null;
   if (!profile) return <Navigate to="/login" replace />;
+  if (profile.must_change_password) return <Navigate to="/set-password" replace />;
   return <Navigate to={profile.role === 'admin' ? '/admin/dashboard' : '/security/residents'} replace />;
 }
 

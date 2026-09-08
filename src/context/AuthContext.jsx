@@ -35,7 +35,11 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function loadProfile(userId) {
-    const { data } = await supabase.from('profiles').select('id, full_name, role').eq('id', userId).single();
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, full_name, role, must_change_password')
+      .eq('id', userId)
+      .single();
     setProfile(data || null);
     setLoading(false);
   }
@@ -49,7 +53,17 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut();
   }
 
-  const value = { session, profile, loading, signIn, signOut };
+  async function completePasswordSetup(password) {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+
+    if (session) {
+      await supabase.from('profiles').update({ must_change_password: false }).eq('id', session.user.id);
+      setProfile((prev) => (prev ? { ...prev, must_change_password: false } : prev));
+    }
+  }
+
+  const value = { session, profile, loading, signIn, signOut, completePasswordSetup };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../context/AuthContext';
 
 export default function SetPassword() {
+  const { completePasswordSetup } = useAuth();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
@@ -24,8 +25,7 @@ export default function SetPassword() {
 
     setSubmitting(true);
     try {
-      const { error: updateError } = await supabase.auth.updateUser({ password });
-      if (updateError) throw updateError;
+      await completePasswordSetup(password);
       navigate('/');
     } catch (err) {
       setError(err.message || 'Failed to set password');
