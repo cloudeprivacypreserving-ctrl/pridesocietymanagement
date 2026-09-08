@@ -49,10 +49,13 @@ const CheckCircleIcon = (
   </svg>
 );
 
-function phoneDigitCount(raw) {
-  let digits = (raw || '').replace(/[^\d]/g, '');
-  if (raw.startsWith('+91')) digits = digits.slice(2);
-  return digits.length;
+function isLikelyValidPhone(raw) {
+  try {
+    normalizePhone(raw);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export default function ResidentForm({ initial, onSubmit, submitLabel, showAdminFields = false }) {
@@ -166,10 +169,8 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
 
   const unitNum = parseInt(unit, 10);
   const unitValid = unit === '' || (unitNum >= 101 && unitNum <= 2307 && unit.length >= 3);
-  const phoneDigits = phoneDigitCount(phone);
   const phoneTouched = phone.length > 0;
-  const phoneValid = !phoneTouched || phoneDigits === 10;
-  const missingDigits = 10 - phoneDigits;
+  const phoneValid = !phoneTouched || isLikelyValidPhone(phone);
 
   return (
     <form className="card" onSubmit={handleSubmit} style={{ maxWidth: 480 }}>
@@ -280,7 +281,7 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
         </div>
         {!phoneValid ? (
           <div style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4 }}>
-            10-digit mobile number required ({missingDigits} digit{missingDigits === 1 ? '' : 's'} missing)
+            Enter a valid 10-digit Indian mobile number
           </div>
         ) : (
           <div style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>

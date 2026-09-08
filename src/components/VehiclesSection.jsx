@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import { normalizeVehiclePlate } from '../lib/vehiclePlate';
 import { Car, Trash } from './icons';
 
 export default function VehiclesSection({ residentId }) {
@@ -25,9 +26,18 @@ export default function VehiclesSection({ residentId }) {
     e.preventDefault();
     if (!plateNumber.trim()) return;
     setError('');
+
+    let normalizedPlate;
+    try {
+      normalizedPlate = normalizeVehiclePlate(plateNumber);
+    } catch (err) {
+      setError(err.message);
+      return;
+    }
+
     setAdding(true);
     try {
-      await api.post('/vehicles', { resident_id: residentId, plate_number: plateNumber.trim(), vehicle_type: vehicleType.trim() || null });
+      await api.post('/vehicles', { resident_id: residentId, plate_number: normalizedPlate, vehicle_type: vehicleType.trim() || null });
       setPlateNumber('');
       setVehicleType('');
       load();
@@ -89,7 +99,7 @@ export default function VehiclesSection({ residentId }) {
 
       <form onSubmit={handleAdd} style={{ display: 'flex', gap: 8 }}>
         <input
-          placeholder="Plate number (e.g. MH-02-DF-9182)"
+          placeholder="MH-02-DF-9182 or 21-BH-1234-AB"
           value={plateNumber}
           onChange={(e) => setPlateNumber(e.target.value)}
           style={{ maxWidth: 220 }}

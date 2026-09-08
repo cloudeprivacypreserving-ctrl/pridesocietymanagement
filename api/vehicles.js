@@ -2,6 +2,7 @@ const { getSupabaseAdmin } = require('./_lib/supabaseAdmin');
 const { requireRole } = require('./_lib/auth');
 const { writeAuditLog } = require('./_lib/audit');
 const { ok, fail } = require('./_lib/responses');
+const { normalizeVehiclePlate } = require('./_lib/vehiclePlate');
 
 // Handles /api/vehicles (list, create) and /api/vehicles/:id (delete)
 // in one function to stay under Vercel Hobby's per-deployment function
@@ -67,7 +68,12 @@ async function handleCreate(req, res) {
     return fail(res, 404, 'Resident not found', 'resident_id');
   }
 
-  const normalizedPlate = plate_number.trim().toUpperCase().replace(/\s+/g, ' ');
+  let normalizedPlate;
+  try {
+    normalizedPlate = normalizeVehiclePlate(plate_number);
+  } catch (err) {
+    return fail(res, 400, err.message, 'plate_number');
+  }
 
   const { data, error } = await supabase
     .from('vehicles')
@@ -81,6 +87,9 @@ async function handleCreate(req, res) {
     .single();
 
   if (error) {
+    if (error.code === '23505') {
+      return fail(res, 409, `Vehicle ${normalizedPlate} is already registered to another resident`, 'plate_number');
+    }
     console.error('Create vehicle failed:', error.message);
     return fail(res, 500, 'Failed to add vehicle');
   }
