@@ -68,6 +68,18 @@ together. (Install the Vercel CLI with `npm i -g vercel` if you don't have
 it.) Alternatively, run `npm run dev` for frontend-only work against a
 already-deployed API.
 
+If `vercel dev` fails locally (for example, a `yarn` build-detection issue
+on a machine without `yarn` installed), run the two dev servers separately
+instead:
+
+```bash
+node scripts/dev-api-server.js   # API on http://localhost:3000
+npm run dev                      # Vite frontend on http://localhost:5173, proxies /api to :3000
+```
+
+This is a local-only stand-in for Vercel's routing — it's not used in
+production, where Vercel serves `api/` directly.
+
 ## 5. Deploy
 
 1. Push this repo to GitHub.
@@ -134,3 +146,4 @@ This system manages the resident *directory*, not day-to-day gate entries —
 no visitor logging, QR codes, or vehicle tracking. No multi-society support,
 no custom roles beyond Admin/Security, no real-time features. Keep it
 simple.
+
