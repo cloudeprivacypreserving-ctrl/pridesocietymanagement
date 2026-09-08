@@ -14,33 +14,35 @@ export default function MySubmissions() {
 
   return (
     <Layout>
-      <h1>My submissions</h1>
+      <div className="top-bar"><h1>My submissions</h1></div>
       {error && <div className="error-text">{error}</div>}
-      <table>
-        <thead>
-          <tr>
-            <th>Flat</th>
-            <th>Name</th>
-            <th>Status</th>
-            <th>Reason (if rejected)</th>
-            <th>Submitted</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td>{item.flat_number}</td>
-              <td>{item.resident_name}</td>
-              <td><span className={`pill ${PILL[item.status]}`}>{item.status}</span></td>
-              <td>{item.rejection_reason || '—'}</td>
-              <td>{new Date(item.created_at).toLocaleDateString()}</td>
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Flat</th>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Reason (if rejected)</th>
+              <th>Submitted</th>
             </tr>
-          ))}
-          {items.length === 0 && (
-            <tr><td colSpan={5} style={{ color: 'var(--ink-dim)' }}>No submissions yet.</td></tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr key={item.id}>
+                <td>{item.flat_number}</td>
+                <td>{item.resident_name}</td>
+                <td><span className={`pill ${PILL[item.status]}`}>{item.status}</span></td>
+                <td className="dim">{item.rejection_reason || '—'}</td>
+                <td className="dim">{new Date(item.created_at).toLocaleDateString()}</td>
+              </tr>
+            ))}
+            {items.length === 0 && (
+              <tr><td colSpan={5} style={{ color: 'var(--ink-dim)' }}>No submissions yet.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </Layout>
   );
 }

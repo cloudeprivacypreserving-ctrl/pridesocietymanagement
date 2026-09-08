@@ -22,18 +22,23 @@ export default function Layout({ children }) {
   return (
     <div className="layout">
       <aside className="sidebar">
-        <h2>Society Entry</h2>
+        <div className="brand">
+          <div className="brand-mark" />
+          <div className="brand-text">Society Entry</div>
+        </div>
         <nav>
           {links.map((link) => (
-            <NavLink key={link.to} to={link.to} className={({ isActive }) => (isActive ? 'active' : '')}>
+            <NavLink key={link.to} to={link.to} className={({ isActive }) => (isActive ? 'active' : '')} end>
               {link.label}
             </NavLink>
           ))}
         </nav>
-        <div style={{ marginTop: 32, fontSize: 13, color: 'var(--ink-dim)' }}>
-          <div>{profile?.full_name}</div>
-          <div style={{ textTransform: 'capitalize' }}>{profile?.role}</div>
-          <button className="btn" style={{ marginTop: 10, width: '100%' }} onClick={signOut}>
+        <div className="sidebar-footer">
+          <div className="sidebar-user">
+            <div className="name">{profile?.full_name}</div>
+            <div className="role">{profile?.role}</div>
+          </div>
+          <button className="btn" style={{ width: '100%' }} onClick={signOut}>
             Sign out
           </button>
         </div>

@@ -15,33 +15,37 @@ export default function AuditLog() {
 
   return (
     <Layout>
-      <h1>Audit log</h1>
+      <div className="top-bar"><h1>Audit log</h1></div>
       {error && <div className="error-text">{error}</div>}
-      <table>
-        <thead>
-          <tr>
-            <th>Action</th>
-            <th>Target</th>
-            <th>Details</th>
-            <th>When</th>
-          </tr>
-        </thead>
-        <tbody>
-          {result.entries.map((entry) => (
-            <tr key={entry.id}>
-              <td>{entry.action}</td>
-              <td>{entry.target_table ? `${entry.target_table} · ${entry.target_id}` : '—'}</td>
-              <td style={{ maxWidth: 320, wordBreak: 'break-word' }}>
-                {entry.details ? JSON.stringify(entry.details) : '—'}
-              </td>
-              <td>{new Date(entry.created_at).toLocaleString()}</td>
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Action</th>
+              <th>Target</th>
+              <th>Details</th>
+              <th>When</th>
             </tr>
-          ))}
-          {result.entries.length === 0 && (
-            <tr><td colSpan={4} style={{ color: 'var(--ink-dim)' }}>No entries yet.</td></tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {result.entries.map((entry) => (
+              <tr key={entry.id}>
+                <td>{entry.action}</td>
+                <td className="dim" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12.5 }}>
+                  {entry.target_table ? `${entry.target_table} · ${entry.target_id}` : '—'}
+                </td>
+                <td className="dim" style={{ maxWidth: 320, wordBreak: 'break-word', fontSize: 12.5 }}>
+                  {entry.details ? JSON.stringify(entry.details) : '—'}
+                </td>
+                <td className="dim">{new Date(entry.created_at).toLocaleString()}</td>
+              </tr>
+            ))}
+            {result.entries.length === 0 && (
+              <tr><td colSpan={4} style={{ color: 'var(--ink-dim)' }}>No entries yet.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 16, alignItems: 'center' }}>
         <button className="btn" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Previous</button>

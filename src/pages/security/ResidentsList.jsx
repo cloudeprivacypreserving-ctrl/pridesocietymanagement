@@ -45,33 +45,35 @@ export default function ResidentsList() {
 
       {error && <div className="error-text">{error}</div>}
       {loading ? (
-        <div>Loading...</div>
+        <div style={{ color: 'var(--ink-dim)' }}>Loading...</div>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Flat</th>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Phone</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {residents.map((r) => (
-              <tr key={r.id}>
-                <td>{r.flat_number}</td>
-                <td>{r.resident_name}</td>
-                <td style={{ textTransform: 'capitalize' }}>{r.occupancy_type}</td>
-                <td>{r.phone}</td>
-                <td><Link to={`/security/residents/${r.id}`}>View</Link></td>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Flat</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Phone</th>
+                <th></th>
               </tr>
-            ))}
-            {residents.length === 0 && (
-              <tr><td colSpan={5} style={{ color: 'var(--ink-dim)' }}>No residents found.</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {residents.map((r) => (
+                <tr key={r.id}>
+                  <td>{r.flat_number}</td>
+                  <td>{r.resident_name}</td>
+                  <td style={{ textTransform: 'capitalize' }}>{r.occupancy_type}</td>
+                  <td className="dim">{r.phone}</td>
+                  <td><Link to={`/security/residents/${r.id}`}>View</Link></td>
+                </tr>
+              ))}
+              {residents.length === 0 && (
+                <tr><td colSpan={5} style={{ color: 'var(--ink-dim)' }}>No residents found.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
     </Layout>
   );
