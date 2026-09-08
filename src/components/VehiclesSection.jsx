@@ -3,12 +3,23 @@ import { api } from '../lib/api';
 import { normalizeVehiclePlate } from '../lib/vehiclePlate';
 import { Car, Trash } from './icons';
 
+const BikeIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <circle cx="5.5" cy="17.5" r="3.5" />
+    <circle cx="18.5" cy="17.5" r="3.5" />
+    <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM12 17.5V14l-3-3 4-3 2 3h3" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const VEHICLE_TYPE_LABEL = { two_wheeler: 'Two-wheeler', four_wheeler: 'Four-wheeler' };
+const VEHICLE_TYPE_ICON = { two_wheeler: BikeIcon, four_wheeler: Car };
+
 export default function VehiclesSection({ residentId }) {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [plateNumber, setPlateNumber] = useState('');
-  const [vehicleType, setVehicleType] = useState('');
+  const [vehicleType, setVehicleType] = useState('four_wheeler');
   const [adding, setAdding] = useState(false);
 
   function load() {
@@ -37,7 +48,7 @@ export default function VehiclesSection({ residentId }) {
 
     setAdding(true);
     try {
-      await api.post('/vehicles', { resident_id: residentId, plate_number: normalizedPlate, vehicle_type: vehicleType.trim() || null });
+      await api.post('/vehicles', { resident_id: residentId, plate_number: normalizedPlate, vehicle_type: vehicleType });
       setPlateNumber('');
       setVehicleType('');
       load();
@@ -85,9 +96,9 @@ export default function VehiclesSection({ residentId }) {
               }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span className="detail-icon">{Car}</span>
+                <span className="detail-icon">{VEHICLE_TYPE_ICON[v.vehicle_type] || Car}</span>
                 <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>{v.plate_number}</span>
-                {v.vehicle_type && <span style={{ color: 'var(--ink-dim)' }}> · {v.vehicle_type}</span>}
+                {v.vehicle_type && <span style={{ color: 'var(--ink-dim)' }}> · {VEHICLE_TYPE_LABEL[v.vehicle_type] || v.vehicle_type}</span>}
               </span>
               <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: 12.5 }} onClick={() => handleRemove(v.id)}>
                 <span className="btn-icon">{Trash}</span> Remove
@@ -97,22 +108,33 @@ export default function VehiclesSection({ residentId }) {
         </div>
       )}
 
-      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 8 }}>
-        <input
-          placeholder="MH-02-DF-9182 or 21-BH-1234-AB"
-          value={plateNumber}
-          onChange={(e) => setPlateNumber(e.target.value)}
-          style={{ maxWidth: 220 }}
-        />
-        <input
-          placeholder="Type (optional)"
-          value={vehicleType}
-          onChange={(e) => setVehicleType(e.target.value)}
-          style={{ maxWidth: 140 }}
-        />
-        <button className="btn btn-primary" type="submit" disabled={adding || !plateNumber.trim()}>
-          {adding ? 'Adding...' : 'Add vehicle'}
-        </button>
+      <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            placeholder="MH-02-DF-9182 or 21-BH-1234-AB"
+            value={plateNumber}
+            onChange={(e) => setPlateNumber(e.target.value)}
+          />
+          <button className="btn btn-primary" type="submit" disabled={adding || !plateNumber.trim()} style={{ flexShrink: 0 }}>
+            {adding ? 'Adding...' : 'Add vehicle'}
+          </button>
+        </div>
+        <div className="segmented segmented-full" style={{ maxWidth: 320 }}>
+          <button
+            type="button"
+            className={vehicleType === 'two_wheeler' ? 'active' : ''}
+            onClick={() => setVehicleType('two_wheeler')}
+          >
+            <span className="segmented-icon">{BikeIcon}</span> Two-wheeler
+          </button>
+          <button
+            type="button"
+            className={vehicleType === 'four_wheeler' ? 'active' : ''}
+            onClick={() => setVehicleType('four_wheeler')}
+          >
+            <span className="segmented-icon">{Car}</span> Four-wheeler
+          </button>
+        </div>
       </form>
     </div>
   );

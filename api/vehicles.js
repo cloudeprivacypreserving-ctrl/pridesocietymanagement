@@ -55,6 +55,9 @@ async function handleCreate(req, res) {
   if (!resident_id || !plate_number || !plate_number.trim()) {
     return fail(res, 400, 'resident_id and plate_number are required');
   }
+  if (vehicle_type && !['two_wheeler', 'four_wheeler'].includes(vehicle_type)) {
+    return fail(res, 400, 'vehicle_type must be two_wheeler or four_wheeler', 'vehicle_type');
+  }
 
   const supabase = getSupabaseAdmin();
 
