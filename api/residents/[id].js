@@ -3,6 +3,7 @@ const { requireRole } = require('../_lib/auth');
 const { writeAuditLog } = require('../_lib/audit');
 const { ok, fail } = require('../_lib/responses');
 const { normalizeFlatNumber } = require('../_lib/flatNumber');
+const { normalizePhone } = require('../_lib/phone');
 
 module.exports = async function handler(req, res) {
   const { id } = req.query;
@@ -48,7 +49,13 @@ async function handleUpdate(req, res, id) {
   }
   if (occupancy_type !== undefined) updates.occupancy_type = occupancy_type;
   if (resident_name !== undefined) updates.resident_name = resident_name;
-  if (phone !== undefined) updates.phone = phone;
+  if (phone !== undefined) {
+    try {
+      updates.phone = normalizePhone(phone);
+    } catch (err) {
+      return fail(res, 400, err.message, 'phone');
+    }
+  }
   if (email !== undefined) updates.email = email;
   if (photo_path !== undefined) updates.photo_path = photo_path;
 

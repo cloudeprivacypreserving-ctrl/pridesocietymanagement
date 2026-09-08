@@ -3,6 +3,7 @@ const { requireRole } = require('../_lib/auth');
 const { writeAuditLog } = require('../_lib/audit');
 const { ok, fail } = require('../_lib/responses');
 const { normalizeFlatNumber } = require('../_lib/flatNumber');
+const { normalizePhone } = require('../_lib/phone');
 
 module.exports = async function handler(req, res) {
   if (req.method === 'GET') return handleList(req, res);
@@ -59,6 +60,13 @@ async function handleSubmit(req, res) {
     return fail(res, 400, err.message, 'flat_number');
   }
 
+  let normalizedPhone;
+  try {
+    normalizedPhone = normalizePhone(phone);
+  } catch (err) {
+    return fail(res, 400, err.message, 'phone');
+  }
+
   const supabase = getSupabaseAdmin();
 
   const { data, error } = await supabase
@@ -67,7 +75,7 @@ async function handleSubmit(req, res) {
       flat_number: normalizedFlat,
       occupancy_type,
       resident_name,
-      phone,
+      phone: normalizedPhone,
       email: email || null,
       photo_path: photo_path || null,
       submitted_by: auth.profile.id,

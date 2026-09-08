@@ -2,12 +2,20 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { api } from '../lib/api';
 import { normalizeFlatNumber } from '../lib/flatNumber';
+import { normalizePhone } from '../lib/phone';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png'];
 const MAX_BYTES = 3 * 1024 * 1024;
 
+function splitFlatNumber(flatNumber) {
+  const match = (flatNumber || '').match(/^([AB])-(\d+)$/);
+  return match ? { tower: match[1], unit: match[2] } : { tower: 'A', unit: '' };
+}
+
 export default function ResidentForm({ initial, onSubmit, submitLabel }) {
-  const [flatNumber, setFlatNumber] = useState(initial?.flat_number || '');
+  const initialFlat = splitFlatNumber(initial?.flat_number);
+  const [tower, setTower] = useState(initialFlat.tower);
+  const [unit, setUnit] = useState(initialFlat.unit);
   const [occupancyType, setOccupancyType] = useState(initial?.occupancy_type || 'owner');
   const [residentName, setResidentName] = useState(initial?.resident_name || '');
   const [phone, setPhone] = useState(initial?.phone || '');
@@ -56,14 +64,22 @@ export default function ResidentForm({ initial, onSubmit, submitLabel }) {
     e.preventDefault();
     setError('');
 
-    if (!flatNumber.trim() || !residentName.trim() || !phone.trim()) {
+    if (!unit.trim() || !residentName.trim() || !phone.trim()) {
       setError('Flat number, resident name, and phone are required');
       return;
     }
 
     let normalizedFlat;
     try {
-      normalizedFlat = normalizeFlatNumber(flatNumber);
+      normalizedFlat = normalizeFlatNumber(`${tower}-${unit.trim()}`);
+    } catch (err) {
+      setError(err.message);
+      return;
+    }
+
+    let normalizedPhone;
+    try {
+      normalizedPhone = normalizePhone(phone);
     } catch (err) {
       setError(err.message);
       return;
@@ -75,7 +91,7 @@ export default function ResidentForm({ initial, onSubmit, submitLabel }) {
         flat_number: normalizedFlat,
         occupancy_type: occupancyType,
         resident_name: residentName.trim(),
-        phone: phone.trim(),
+        phone: normalizedPhone,
         email: email.trim() || null,
         photo_path: photoPath,
       });
@@ -89,16 +105,30 @@ export default function ResidentForm({ initial, onSubmit, submitLabel }) {
   return (
     <form className="card" onSubmit={handleSubmit} style={{ maxWidth: 480 }}>
       <div className="form-row">
-        <label htmlFor="flat_number">Flat number</label>
-        <input
-          id="flat_number"
-          value={flatNumber}
-          onChange={(e) => setFlatNumber(e.target.value)}
-          placeholder="A-101"
-          required
-        />
+        <label htmlFor="unit">Flat number</label>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <select
+            id="tower"
+            aria-label="Tower"
+            value={tower}
+            onChange={(e) => setTower(e.target.value)}
+            style={{ flex: '0 0 80px' }}
+          >
+            <option value="A">A</option>
+            <option value="B">B</option>
+          </select>
+          <input
+            id="unit"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={unit}
+            onChange={(e) => setUnit(e.target.value.replace(/[^0-9]/g, ''))}
+            placeholder="101"
+            required
+          />
+        </div>
         <div style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>
-          Tower A or B, then unit number (101–2307). E.g. A-101, B-2307.
+          Unit number between 101 and 2307.
         </div>
       </div>
 
@@ -117,7 +147,18 @@ export default function ResidentForm({ initial, onSubmit, submitLabel }) {
 
       <div className="form-row">
         <label htmlFor="phone">Phone number</label>
-        <input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+        <input
+          id="phone"
+          inputMode="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value.replace(/[^0-9+]/g, ''))}
+          placeholder="9876543210"
+          maxLength={13}
+          required
+        />
+        <div style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>
+          10-digit mobile number, optionally prefixed with +91.
+        </div>
       </div>
 
       <div className="form-row">
