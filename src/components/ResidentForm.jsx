@@ -3,9 +3,11 @@ import { supabase } from '../lib/supabaseClient';
 import { api } from '../lib/api';
 import { normalizeFlatNumber } from '../lib/flatNumber';
 import { normalizePhone } from '../lib/phone';
+import { compressImage } from '../lib/compressImage';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png'];
 const MAX_BYTES = 3 * 1024 * 1024;
+const MAX_ORIGINAL_BYTES = 15 * 1024 * 1024; // reject absurdly large originals before even trying to compress
 
 function splitFlatNumber(flatNumber) {
   const match = (flatNumber || '').match(/^([AB])-(\d+)$/);
@@ -83,26 +85,41 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
       setError('Only JPEG and PNG images are allowed');
       return;
     }
-    if (file.size > MAX_BYTES) {
-      setError('Photo must be 3 MB or smaller');
+    if (file.size > MAX_ORIGINAL_BYTES) {
+      setError('Photo must be 15 MB or smaller');
       return;
     }
 
     setUploading(true);
     try {
+      let uploadFile = file;
+      try {
+        uploadFile = await compressImage(file);
+      } catch {
+        // Compression is a best-effort optimization — if it fails for any
+        // reason (unsupported format quirk, etc.), fall back to the
+        // original file rather than blocking the upload entirely.
+      }
+
+      if (uploadFile.size > MAX_BYTES) {
+        setError('Photo is still too large after compression — try a different image');
+        setUploading(false);
+        return;
+      }
+
       const { path, token } = await api.post('/photos/upload-url', {
-        file_name: file.name,
-        content_type: file.type,
-        size_bytes: file.size,
+        file_name: uploadFile.name,
+        content_type: uploadFile.type,
+        size_bytes: uploadFile.size,
       });
 
       const { error: uploadError } = await supabase.storage
         .from('resident-photos')
-        .uploadToSignedUrl(path, token, file);
+        .uploadToSignedUrl(path, token, uploadFile);
 
       if (uploadError) throw uploadError;
       setPhotoPath(path);
-      setPhotoFileName(file.name);
+      setPhotoFileName(uploadFile.name);
     } catch (err) {
       setError(err.message || 'Photo upload failed');
     } finally {
