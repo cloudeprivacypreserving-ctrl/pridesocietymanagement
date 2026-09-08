@@ -2,6 +2,7 @@ const { getSupabaseAdmin } = require('../_lib/supabaseAdmin');
 const { requireRole } = require('../_lib/auth');
 const { writeAuditLog } = require('../_lib/audit');
 const { ok, fail } = require('../_lib/responses');
+const { normalizeFlatNumber } = require('../_lib/flatNumber');
 
 module.exports = async function handler(req, res) {
   const { id } = req.query;
@@ -38,7 +39,13 @@ async function handleUpdate(req, res, id) {
   }
 
   const updates = {};
-  if (flat_number !== undefined) updates.flat_number = flat_number;
+  if (flat_number !== undefined) {
+    try {
+      updates.flat_number = normalizeFlatNumber(flat_number);
+    } catch (err) {
+      return fail(res, 400, err.message, 'flat_number');
+    }
+  }
   if (occupancy_type !== undefined) updates.occupancy_type = occupancy_type;
   if (resident_name !== undefined) updates.resident_name = resident_name;
   if (phone !== undefined) updates.phone = phone;

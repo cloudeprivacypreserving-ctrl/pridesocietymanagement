@@ -2,6 +2,7 @@ const { getSupabaseAdmin } = require('../_lib/supabaseAdmin');
 const { requireRole } = require('../_lib/auth');
 const { writeAuditLog } = require('../_lib/audit');
 const { ok, fail } = require('../_lib/responses');
+const { normalizeFlatNumber } = require('../_lib/flatNumber');
 
 module.exports = async function handler(req, res) {
   if (req.method === 'GET') return handleList(req, res);
@@ -51,12 +52,19 @@ async function handleSubmit(req, res) {
     return fail(res, 400, 'occupancy_type must be owner or tenant', 'occupancy_type');
   }
 
+  let normalizedFlat;
+  try {
+    normalizedFlat = normalizeFlatNumber(flat_number);
+  } catch (err) {
+    return fail(res, 400, err.message, 'flat_number');
+  }
+
   const supabase = getSupabaseAdmin();
 
   const { data, error } = await supabase
     .from('pending_approvals')
     .insert({
-      flat_number,
+      flat_number: normalizedFlat,
       occupancy_type,
       resident_name,
       phone,
@@ -77,7 +85,7 @@ async function handleSubmit(req, res) {
     action: 'resident_submitted',
     targetTable: 'pending_approvals',
     targetId: data.id,
-    details: { flat_number, occupancy_type },
+    details: { flat_number: normalizedFlat, occupancy_type },
   });
 
   return ok(res, data, 201);

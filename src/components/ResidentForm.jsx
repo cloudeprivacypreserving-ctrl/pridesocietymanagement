@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { api } from '../lib/api';
+import { normalizeFlatNumber } from '../lib/flatNumber';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png'];
 const MAX_BYTES = 3 * 1024 * 1024;
@@ -60,10 +61,18 @@ export default function ResidentForm({ initial, onSubmit, submitLabel }) {
       return;
     }
 
+    let normalizedFlat;
+    try {
+      normalizedFlat = normalizeFlatNumber(flatNumber);
+    } catch (err) {
+      setError(err.message);
+      return;
+    }
+
     setSubmitting(true);
     try {
       await onSubmit({
-        flat_number: flatNumber.trim(),
+        flat_number: normalizedFlat,
         occupancy_type: occupancyType,
         resident_name: residentName.trim(),
         phone: phone.trim(),
@@ -81,7 +90,16 @@ export default function ResidentForm({ initial, onSubmit, submitLabel }) {
     <form className="card" onSubmit={handleSubmit} style={{ maxWidth: 480 }}>
       <div className="form-row">
         <label htmlFor="flat_number">Flat number</label>
-        <input id="flat_number" value={flatNumber} onChange={(e) => setFlatNumber(e.target.value)} required />
+        <input
+          id="flat_number"
+          value={flatNumber}
+          onChange={(e) => setFlatNumber(e.target.value)}
+          placeholder="A-101"
+          required
+        />
+        <div style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>
+          Tower A or B, then unit number (101–2307). E.g. A-101, B-2307.
+        </div>
       </div>
 
       <div className="form-row">
