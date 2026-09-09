@@ -14,7 +14,7 @@ const BikeIcon = (
 const VEHICLE_TYPE_LABEL = { two_wheeler: 'Two-wheeler', four_wheeler: 'Four-wheeler' };
 const VEHICLE_TYPE_ICON = { two_wheeler: BikeIcon, four_wheeler: Car };
 
-export default function VehiclesSection({ residentId }) {
+export default function VehiclesSection({ flatNumber }) {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,13 +25,13 @@ export default function VehiclesSection({ residentId }) {
   function load() {
     setLoading(true);
     api
-      .get(`/vehicles?resident_id=${residentId}`)
+      .get(`/vehicles?flat_number=${encodeURIComponent(flatNumber)}`)
       .then(setVehicles)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }
 
-  useEffect(load, [residentId]);
+  useEffect(load, [flatNumber]);
 
   async function handleAdd(e) {
     e.preventDefault();
@@ -48,9 +48,9 @@ export default function VehiclesSection({ residentId }) {
 
     setAdding(true);
     try {
-      await api.post('/vehicles', { resident_id: residentId, plate_number: normalizedPlate, vehicle_type: vehicleType });
+      await api.post('/vehicles', { flat_number: flatNumber, plate_number: normalizedPlate, vehicle_type: vehicleType });
       setPlateNumber('');
-      setVehicleType('');
+      setVehicleType('four_wheeler');
       load();
     } catch (err) {
       setError(err.message);
@@ -72,7 +72,7 @@ export default function VehiclesSection({ residentId }) {
   return (
     <div className="card" style={{ marginTop: 20 }}>
       <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span className="detail-icon" style={{ color: 'var(--accent)' }}>{Car}</span> Vehicles
+        <span className="detail-icon" style={{ color: 'var(--accent)' }}>{Car}</span> Household vehicles
       </h2>
       {error && <div className="error-text">{error}</div>}
 

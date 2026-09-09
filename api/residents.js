@@ -70,17 +70,20 @@ async function handleList(req, res) {
   }
 
   if (data.length > 0) {
+    // Vehicles belong to the flat, not a specific resident, so every
+    // resident sharing a flat_number shows the same household count.
+    const flatNumbers = [...new Set(data.map((r) => r.flat_number))];
     const { data: vehicles } = await supabase
       .from('vehicles')
-      .select('resident_id')
-      .in('resident_id', data.map((r) => r.id));
+      .select('flat_number')
+      .in('flat_number', flatNumbers);
 
     const counts = {};
     (vehicles || []).forEach((v) => {
-      counts[v.resident_id] = (counts[v.resident_id] || 0) + 1;
+      counts[v.flat_number] = (counts[v.flat_number] || 0) + 1;
     });
     data.forEach((r) => {
-      r.vehicle_count = counts[r.id] || 0;
+      r.vehicle_count = counts[r.flat_number] || 0;
     });
   }
 
@@ -165,9 +168,6 @@ async function handleCreate(req, res) {
     .single();
 
   if (error) {
-    if (error.code === '23505') {
-      return fail(res, 409, `Flat ${normalizedFlat} already has a resident on record`, 'flat_number');
-    }
     console.error('Create resident failed:', error.message);
     return fail(res, 500, 'Failed to create resident');
   }
@@ -194,7 +194,17 @@ async function handleGet(req, res, id) {
     return fail(res, 404, 'Resident not found');
   }
 
-  return ok(res, data);
+  // Other residents sharing this flat — a household can have several
+  // (owner + spouse + parents, or multiple co-tenants on one lease).
+  const { data: flatmates } = await supabase
+    .from('residents')
+    .select('id, resident_name, occupancy_type, phone, photo_path')
+    .eq('flat_number', data.flat_number)
+    .eq('status', 'active')
+    .neq('id', id)
+    .order('created_at', { ascending: true });
+
+  return ok(res, { ...data, flatmates: flatmates || [] });
 }
 
 async function handleUpdate(req, res, id) {
@@ -249,9 +259,6 @@ async function handleUpdate(req, res, id) {
   const { data, error } = await supabase.from('residents').update(updates).eq('id', id).select().single();
 
   if (error) {
-    if (error.code === '23505') {
-      return fail(res, 409, `Flat ${updates.flat_number} already has a resident on record`, 'flat_number');
-    }
     console.error('Update resident failed:', error.message);
     return fail(res, 500, 'Failed to update resident');
   }

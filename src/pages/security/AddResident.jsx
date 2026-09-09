@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import ResidentForm from '../../components/ResidentForm';
 import { api } from '../../lib/api';
@@ -7,6 +7,8 @@ import { api } from '../../lib/api';
 export default function AddResident() {
   const [done, setDone] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const prefilledFlat = searchParams.get('flat');
 
   async function handleSubmit(payload) {
     await api.post('/pending', payload);
@@ -17,9 +19,9 @@ export default function AddResident() {
     <Layout>
       <div className="form-page-header">
         <span className="eyebrow">
-          <span className="eyebrow-dot" /> Submission for review
+          <span className="eyebrow-dot" /> {prefilledFlat ? `Family member — ${prefilledFlat}` : 'Submission for review'}
         </span>
-        <h1>Add new resident</h1>
+        <h1>{prefilledFlat ? 'Add family member' : 'Add new resident'}</h1>
         <div className="directory-subtitle">Submitted residents go to Admin for approval before appearing in the directory</div>
       </div>
       {done ? (
@@ -30,7 +32,11 @@ export default function AddResident() {
           </button>
         </div>
       ) : (
-        <ResidentForm onSubmit={handleSubmit} submitLabel="Submit for approval" />
+        <ResidentForm
+          initial={prefilledFlat ? { flat_number: prefilledFlat } : undefined}
+          onSubmit={handleSubmit}
+          submitLabel={prefilledFlat ? 'Submit family member' : 'Submit for approval'}
+        />
       )}
     </Layout>
   );

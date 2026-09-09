@@ -5,7 +5,7 @@ import ResidentPhoto from '../../components/ResidentPhoto';
 import ResidentForm from '../../components/ResidentForm';
 import VehiclesSection from '../../components/VehiclesSection';
 import { api } from '../../lib/api';
-import { ArrowLeft, Pencil, Trash, Home, Phone, Mail, Calendar } from '../../components/icons';
+import { ArrowLeft, Pencil, Trash, Home, Phone, Mail, Calendar, UserPlus } from '../../components/icons';
 
 export default function ResidentDetail() {
   const { id } = useParams();
@@ -85,7 +85,44 @@ export default function ResidentDetail() {
             </div>
           </div>
 
-          <VehiclesSection residentId={resident.id} />
+          <div className="card" style={{ marginTop: 20 }}>
+            <div className="top-bar" style={{ marginBottom: resident.flatmates.length > 0 ? 14 : 0 }}>
+              <h2 style={{ margin: 0 }}>Others at {resident.flat_number}</h2>
+              <Link className="btn btn-primary" to={`/admin/residents/new?flat=${encodeURIComponent(resident.flat_number)}`}>
+                <span className="btn-icon">{UserPlus}</span> Add family member
+              </Link>
+            </div>
+            {resident.flatmates.length === 0 ? (
+              <div style={{ color: 'var(--ink-dim)', fontSize: 13.5 }}>No other residents recorded at this flat.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {resident.flatmates.map((mate) => (
+                  <Link
+                    key={mate.id}
+                    to={`/admin/residents/${mate.id}`}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '10px 14px',
+                      border: '1px solid var(--line)',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: 13.5,
+                      color: 'var(--ink)',
+                    }}
+                  >
+                    <span>
+                      <strong>{mate.resident_name}</strong>{' '}
+                      <span className="pill pill-approved" style={{ marginLeft: 4 }}>{mate.occupancy_type}</span>
+                    </span>
+                    <span style={{ color: 'var(--ink-dim)' }}>{mate.phone}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <VehiclesSection flatNumber={resident.flat_number} />
         </>
       )}
     </Layout>

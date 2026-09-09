@@ -8,6 +8,10 @@
 //   flat_number, occupancy_type, resident_name, phone, email (optional),
 //   is_council_member (optional, "true"/"false"), lease_expiry_date (optional, YYYY-MM-DD)
 //
+// Multiple rows may share the same flat_number — a flat can have several
+// residents (e.g. owner + spouse + parents, or several co-tenants on one
+// lease). flat_number is no longer unique per resident.
+//
 // Imported residents are marked as approved by whichever admin account
 // owns SUPABASE_SERVICE_ROLE_KEY — there's no "imported by" concept
 // separate from created_by/approved_by, so this uses BOOTSTRAP_ADMIN_EMAIL's
@@ -125,17 +129,6 @@ async function main() {
       console.log(`  line ${r.line}: ${r.error} — ${JSON.stringify(r.row)}`);
     });
   }
-
-  // Duplicate flat_number check within the file itself, before hitting
-  // the database's own unique constraint (clearer error, fails earlier).
-  const seenFlats = new Map();
-  validRows.forEach((r, i) => {
-    if (seenFlats.has(r.flat_number)) {
-      console.warn(`Warning: duplicate flat_number ${r.flat_number} at rows ${seenFlats.get(r.flat_number)} and ${i} — only the first will succeed, the second will fail on insert.`);
-    } else {
-      seenFlats.set(r.flat_number, i);
-    }
-  });
 
   if (dryRun) {
     console.log('\n--dry-run: no rows were inserted. Re-run without --dry-run to actually import.');
