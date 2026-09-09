@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
       .from('residents')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'active')
-      .eq('occupancy_type', 'owner'),
+      .in('occupancy_type', ['owner', 'owner_offsite']),
     supabase
       .from('residents')
       .select('id', { count: 'exact', head: true })

@@ -5,6 +5,7 @@ import ResidentPhoto from '../../components/ResidentPhoto';
 import VehiclesSection from '../../components/VehiclesSection';
 import { api } from '../../lib/api';
 import { ArrowLeft, Home, Phone, Mail, Calendar, UserPlus } from '../../components/icons';
+import { occupancyLabel, flatMissingOwner } from '../../lib/occupancy';
 
 export default function ResidentDetail() {
   const { id } = useParams();
@@ -34,7 +35,7 @@ export default function ResidentDetail() {
         <div className="detail-list">
           <div className="detail-row"><span className="detail-icon">{Home}</span> {resident.flat_number}</div>
           <div className="detail-row">
-            <span className="pill pill-approved" style={{ marginLeft: 20 }}>{resident.occupancy_type}</span>
+            <span className="pill pill-approved" style={{ marginLeft: 20 }}>{occupancyLabel(resident.occupancy_type)}</span>
           </div>
           <div className="detail-row"><span className="detail-icon">{Phone}</span> {resident.phone}</div>
           <div className="detail-row"><span className="detail-icon">{Mail}</span> {resident.email || '—'}</div>
@@ -51,6 +52,11 @@ export default function ResidentDetail() {
             <span className="btn-icon">{UserPlus}</span> Add family member
           </Link>
         </div>
+        {flatMissingOwner([resident, ...resident.flatmates]) && (
+          <div className="pill pill-pending" style={{ marginBottom: 10, display: 'inline-block' }}>
+            No owner on file for this flat
+          </div>
+        )}
         {resident.flatmates.length === 0 ? (
           <div style={{ color: 'var(--ink-dim)', fontSize: 13.5 }}>No other residents recorded at this flat.</div>
         ) : (
@@ -72,7 +78,7 @@ export default function ResidentDetail() {
               >
                 <span>
                   <strong>{mate.resident_name}</strong>{' '}
-                  <span className="pill pill-approved" style={{ marginLeft: 4 }}>{mate.occupancy_type}</span>
+                  <span className="pill pill-approved" style={{ marginLeft: 4 }}>{occupancyLabel(mate.occupancy_type)}</span>
                 </span>
                 <span style={{ color: 'var(--ink-dim)' }}>{mate.phone}</span>
               </Link>

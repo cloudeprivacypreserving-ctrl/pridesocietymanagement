@@ -3,6 +3,7 @@ import Layout from '../../components/Layout';
 import ResidentPhoto from '../../components/ResidentPhoto';
 import { api } from '../../lib/api';
 import { CheckCircle, XCircle, History } from '../../components/icons';
+import { occupancyLabel, isOwnerType } from '../../lib/occupancy';
 
 const PILL = { pending: 'pill-pending', approved: 'pill-approved', rejected: 'pill-rejected' };
 
@@ -94,8 +95,8 @@ export default function PendingApprovals() {
               <div className="submission-card-top">
                 <span className="resident-card-unit">{item.flat_number}</span>
                 <span className="resident-card-name">{item.resident_name}</span>
-                <span className={`pill ${item.occupancy_type === 'owner' ? 'pill-approved' : 'pill-pending'}`}>
-                  {item.occupancy_type}
+                <span className={`pill ${isOwnerType(item.occupancy_type) ? 'pill-approved' : 'pill-pending'}`}>
+                  {occupancyLabel(item.occupancy_type)}
                 </span>
               </div>
               <div className="resident-card-meta">

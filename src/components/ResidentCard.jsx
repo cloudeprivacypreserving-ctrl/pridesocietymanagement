@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { occupancyLabel } from '../lib/occupancy';
 
 const PhoneIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -27,8 +28,8 @@ export default function ResidentCard({ resident, linkTo, linkLabel }) {
       <div className="resident-card-body">
         <div className="resident-card-top">
           <span className="resident-card-name">{resident.resident_name}</span>
-          <span className={`pill ${resident.occupancy_type === 'owner' ? 'pill-approved' : 'pill-pending'}`}>
-            {resident.occupancy_type}
+          <span className={`pill ${resident.occupancy_type !== 'tenant' ? 'pill-approved' : 'pill-pending'}`}>
+            {occupancyLabel(resident.occupancy_type)}
           </span>
         </div>
         <div className="resident-card-meta">

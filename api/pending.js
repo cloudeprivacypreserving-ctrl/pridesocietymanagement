@@ -93,8 +93,8 @@ async function handleSubmit(req, res) {
   if (!flat_number || !occupancy_type || !resident_name || !phone) {
     return fail(res, 400, 'flat_number, occupancy_type, resident_name, and phone are required');
   }
-  if (!['owner', 'tenant'].includes(occupancy_type)) {
-    return fail(res, 400, 'occupancy_type must be owner or tenant', 'occupancy_type');
+  if (!['owner', 'tenant', 'owner_offsite'].includes(occupancy_type)) {
+    return fail(res, 400, 'occupancy_type must be owner, tenant, or owner_offsite', 'occupancy_type');
   }
 
   let normalizedFlat;

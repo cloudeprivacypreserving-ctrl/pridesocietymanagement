@@ -246,7 +246,19 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
           >
             <span className="segmented-icon">{UserIcon}</span> Tenant
           </button>
+          <button
+            type="button"
+            className={occupancyType === 'owner_offsite' ? 'active' : ''}
+            onClick={() => setOccupancyType('owner_offsite')}
+          >
+            <span className="segmented-icon">{UnitIcon}</span> Owner (off-site)
+          </button>
         </div>
+        {occupancyType === 'owner_offsite' && (
+          <div style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>
+            Registered owner of this flat who doesn't currently live here — e.g. a landlord renting it out.
+          </div>
+        )}
       </div>
 
       {showAdminFields && occupancyType === 'tenant' && (

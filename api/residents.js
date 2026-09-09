@@ -43,7 +43,12 @@ async function handleList(req, res) {
     let query = q_.eq('status', 'active');
     if (flat) query = query.ilike('flat_number', `%${flat}%`);
     if (q) query = query.ilike('resident_name', `%${q}%`);
-    if (occupancy_type && ['owner', 'tenant'].includes(occupancy_type)) {
+    if (occupancy_type === 'owner') {
+      // The "Owners" filter pill means owner-of-record regardless of
+      // whether they live at the flat, so it covers both onsite and
+      // offsite owners.
+      query = query.in('occupancy_type', ['owner', 'owner_offsite']);
+    } else if (occupancy_type && ['tenant', 'owner_offsite'].includes(occupancy_type)) {
       query = query.eq('occupancy_type', occupancy_type);
     }
     return query;
@@ -126,8 +131,8 @@ async function handleCreate(req, res) {
   if (!flat_number || !occupancy_type || !resident_name || !phone) {
     return fail(res, 400, 'flat_number, occupancy_type, resident_name, and phone are required');
   }
-  if (!['owner', 'tenant'].includes(occupancy_type)) {
-    return fail(res, 400, 'occupancy_type must be owner or tenant', 'occupancy_type');
+  if (!['owner', 'tenant', 'owner_offsite'].includes(occupancy_type)) {
+    return fail(res, 400, 'occupancy_type must be owner, tenant, or owner_offsite', 'occupancy_type');
   }
   if (lease_expiry_date && occupancy_type !== 'tenant') {
     return fail(res, 400, 'lease_expiry_date only applies to tenants', 'lease_expiry_date');
@@ -221,10 +226,10 @@ async function handleUpdate(req, res, id) {
     lease_expiry_date,
   } = req.body || {};
 
-  if (occupancy_type && !['owner', 'tenant'].includes(occupancy_type)) {
-    return fail(res, 400, 'occupancy_type must be owner or tenant', 'occupancy_type');
+  if (occupancy_type && !['owner', 'tenant', 'owner_offsite'].includes(occupancy_type)) {
+    return fail(res, 400, 'occupancy_type must be owner, tenant, or owner_offsite', 'occupancy_type');
   }
-  if (lease_expiry_date && occupancy_type === 'owner') {
+  if (lease_expiry_date && occupancy_type && occupancy_type !== 'tenant') {
     return fail(res, 400, 'lease_expiry_date only applies to tenants', 'lease_expiry_date');
   }
 

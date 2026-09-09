@@ -6,15 +6,16 @@
 //
 // Run:  node scripts/generate-load-test-data.js
 //
-// Distribution:
+// Distribution (per-flat, not per-resident — every resident at a flat
+// shares a coherent occupancy story, matching how real households work):
 //   - Spread across the real building layout: towers A/B, floors 1-23,
-//     units 01-08 (736 possible flats).
-//   - ~70% of residents are owners, ~30% tenants (per-resident, not
-//     per-flat — a flat can mix owner + tenant family members, which is
-//     unusual in practice but not disallowed by the schema).
-//   - Most flats get 1 resident; a portion get 2-4 (family members /
-//     co-tenants) to reach ~1,000 total residents and exercise the
-//     flatmates feature under real load.
+//     units 01-08 (368 possible flats).
+//   - ~70% of flats are owner-occupied: 2-4 residents, all occupancy_type
+//     'owner' (spouse/parents living together).
+//   - ~30% of flats are rented out: 2-5 'tenant' residents (co-tenants on
+//     one lease) PLUS exactly one 'owner_offsite' record for the landlord,
+//     so every tenant-occupied flat still has an owner of record on file.
+//   - Reaches ~1,000 total residents across all 368 real flats.
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 
@@ -97,34 +98,66 @@ async function main() {
   }
   console.log(`Attributing load-test residents to admin profile: ${adminId}`);
 
-  // Distribute TARGET_RESIDENT_COUNT residents across flats: most flats
-  // get 1, a portion get 2-4, until the target is reached.
+  // Distribute TARGET_RESIDENT_COUNT residents across flats. occupancy_type
+  // is decided once per flat, not per resident, so every household is
+  // internally consistent — either an owner-occupied flat (all 'owner'), or
+  // a rented flat with tenant co-residents PLUS one 'owner_offsite' record
+  // for the landlord.
   const flats = shuffle(allFlats());
   const rows = [];
   let flatIndex = 0;
 
   while (rows.length < TARGET_RESIDENT_COUNT && flatIndex < flats.length) {
     const flat = flats[flatIndex++];
-    // Only 368 real flats exist (2 towers x 23 floors x 8 units), so
-    // reaching ~1,000 residents needs an average of ~2.7 residents/flat,
-    // not just a minority of flats having extras. Every flat gets at
-    // least 2 residents; about half get 3-4.
-    const residentsHere = Math.random() < 0.5 ? 2 : 3 + Math.floor(Math.random() * 2);
+    const isRented = Math.random() >= OWNER_RATIO;
 
-    for (let i = 0; i < residentsHere && rows.length < TARGET_RESIDENT_COUNT; i++) {
-      const occupancy_type = Math.random() < OWNER_RATIO ? 'owner' : 'tenant';
-      const name = `${NAME_PREFIX} ${randomFrom(FIRST_NAMES)} ${randomFrom(LAST_NAMES)}${i === 0 ? '' : randomFrom(RELATIONS)}`;
+    if (isRented) {
+      // Landlord of record — doesn't live here, still on file.
       rows.push({
         flat_number: flat,
-        occupancy_type,
-        resident_name: name,
+        occupancy_type: 'owner_offsite',
+        resident_name: `${NAME_PREFIX} ${randomFrom(FIRST_NAMES)} ${randomFrom(LAST_NAMES)}`,
         phone: randomPhone(),
         email: null,
         is_council_member: false,
-        lease_expiry_date: occupancy_type === 'tenant' ? '2027-12-31' : null,
+        lease_expiry_date: null,
         created_by: adminId,
         approved_by: adminId,
       });
+
+      // Only 368 real flats exist (2 towers x 23 floors x 8 units), so
+      // reaching ~1,000 residents needs an average of ~2.7 residents/flat.
+      // Rented flats get 2-5 co-tenants sharing one lease.
+      const tenantCount = 2 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < tenantCount && rows.length < TARGET_RESIDENT_COUNT; i++) {
+        rows.push({
+          flat_number: flat,
+          occupancy_type: 'tenant',
+          resident_name: `${NAME_PREFIX} ${randomFrom(FIRST_NAMES)} ${randomFrom(LAST_NAMES)}${i === 0 ? '' : randomFrom(RELATIONS)}`,
+          phone: randomPhone(),
+          email: null,
+          is_council_member: false,
+          lease_expiry_date: '2027-12-31',
+          created_by: adminId,
+          approved_by: adminId,
+        });
+      }
+    } else {
+      // Owner-occupied flat: 2-4 owner residents (spouse/parents).
+      const residentsHere = Math.random() < 0.5 ? 2 : 3 + Math.floor(Math.random() * 2);
+      for (let i = 0; i < residentsHere && rows.length < TARGET_RESIDENT_COUNT; i++) {
+        rows.push({
+          flat_number: flat,
+          occupancy_type: 'owner',
+          resident_name: `${NAME_PREFIX} ${randomFrom(FIRST_NAMES)} ${randomFrom(LAST_NAMES)}${i === 0 ? '' : randomFrom(RELATIONS)}`,
+          phone: randomPhone(),
+          email: null,
+          is_council_member: false,
+          lease_expiry_date: null,
+          created_by: adminId,
+          approved_by: adminId,
+        });
+      }
     }
   }
 
@@ -133,9 +166,10 @@ async function main() {
   }
 
   const ownerCount = rows.filter((r) => r.occupancy_type === 'owner').length;
-  const tenantCount = rows.length - ownerCount;
+  const offsiteOwnerCount = rows.filter((r) => r.occupancy_type === 'owner_offsite').length;
+  const tenantCount = rows.filter((r) => r.occupancy_type === 'tenant').length;
   const flatsUsed = new Set(rows.map((r) => r.flat_number)).size;
-  console.log(`Generated ${rows.length} residents across ${flatsUsed} flats (${ownerCount} owners, ${tenantCount} tenants).`);
+  console.log(`Generated ${rows.length} residents across ${flatsUsed} flats (${ownerCount} owners, ${offsiteOwnerCount} off-site owners, ${tenantCount} tenants).`);
 
   console.log(`\nInserting in batches of ${BATCH_SIZE}...`);
   let inserted = 0;

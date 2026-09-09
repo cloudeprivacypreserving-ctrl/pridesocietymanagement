@@ -93,8 +93,8 @@ async function main() {
       if (!row.flat_number || !row.occupancy_type || !row.resident_name || !row.phone) {
         throw new Error('flat_number, occupancy_type, resident_name, and phone are required');
       }
-      if (!['owner', 'tenant'].includes(row.occupancy_type.toLowerCase())) {
-        throw new Error(`occupancy_type must be "owner" or "tenant", got "${row.occupancy_type}"`);
+      if (!['owner', 'tenant', 'owner_offsite'].includes(row.occupancy_type.toLowerCase())) {
+        throw new Error(`occupancy_type must be "owner", "tenant", or "owner_offsite", got "${row.occupancy_type}"`);
       }
 
       const flat_number = normalizeFlatNumber(row.flat_number);
