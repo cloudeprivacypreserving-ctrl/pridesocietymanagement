@@ -2,6 +2,7 @@
   "installCommand": "npm install",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "regions": ["bom1"],
   "rewrites": [
     { "source": "/api/residents/:id", "destination": "/api/residents" },
     { "source": "/api/pending/:id/:action", "destination": "/api/pending" },
