@@ -39,15 +39,11 @@ async function handleList(req, res) {
   const from = (pageNum - 1) * RESIDENTS_PAGE_SIZE;
   const to = from + RESIDENTS_PAGE_SIZE - 1;
 
-  // includeOccupancy=false is used for the pill-count queries below, so
-  // they reflect the search/flat filter but never the occupancy_type
-  // filter itself — otherwise selecting "Owners" would make every pill's
-  // count (including "Tenants") reflect an owner-only query.
-  function applyFilters(q_, { includeOccupancy = true } = {}) {
+  function applyFilters(q_) {
     let query = q_.eq('status', 'active');
     if (flat) query = query.ilike('flat_number', `%${flat}%`);
     if (q) query = query.ilike('resident_name', `%${q}%`);
-    if (includeOccupancy && occupancy_type && ['owner', 'tenant'].includes(occupancy_type)) {
+    if (occupancy_type && ['owner', 'tenant'].includes(occupancy_type)) {
       query = query.eq('occupancy_type', occupancy_type);
     }
     return query;
@@ -90,11 +86,14 @@ async function handleList(req, res) {
   // Totals for the All/Owners/Tenants filter pills — reflect the search/
   // flat filter currently applied (if any), but never the occupancy_type
   // filter, so switching pills always shows counts for all three options.
-  const [allRes, ownerRes, tenantRes] = await Promise.all([
-    applyFilters(supabase.from('residents').select('id', { count: 'exact', head: true }), { includeOccupancy: false }),
-    applyFilters(supabase.from('residents').select('id', { count: 'exact', head: true }), { includeOccupancy: false }).eq('occupancy_type', 'owner'),
-    applyFilters(supabase.from('residents').select('id', { count: 'exact', head: true }), { includeOccupancy: false }).eq('occupancy_type', 'tenant'),
-  ]);
+  // One RPC call instead of three separate count queries.
+  const { data: countsRow, error: countsError } = await supabase
+    .rpc('resident_occupancy_counts', { p_search: q || null, p_flat: flat || null })
+    .single();
+
+  if (countsError) {
+    console.error('Resident occupancy counts failed:', countsError.message);
+  }
 
   return ok(res, {
     entries: data,
@@ -102,9 +101,9 @@ async function handleList(req, res) {
     page_size: RESIDENTS_PAGE_SIZE,
     total: count || 0,
     counts: {
-      all: allRes.count || 0,
-      owner: ownerRes.count || 0,
-      tenant: tenantRes.count || 0,
+      all: countsRow?.all_count || 0,
+      owner: countsRow?.owner_count || 0,
+      tenant: countsRow?.tenant_count || 0,
     },
   });
 }
