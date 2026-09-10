@@ -50,6 +50,28 @@ const CheckCircleIcon = (
     <path d="M8 12l3 3 5-6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+const MaleIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <circle cx="10" cy="14" r="6" />
+    <line x1="14.5" y1="9.5" x2="20" y2="4" strokeLinecap="round" />
+    <polyline points="15 4 20 4 20 9" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const FemaleIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <circle cx="12" cy="8" r="6" />
+    <line x1="12" y1="14" x2="12" y2="22" strokeLinecap="round" />
+    <line x1="9" y1="19" x2="15" y2="19" strokeLinecap="round" />
+  </svg>
+);
+const HomeOffIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <path d="M3 11l9-8 9 8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" strokeLinecap="round" strokeLinejoin="round" />
+    <line x1="14" y1="6" x2="21" y2="6" strokeLinecap="round" />
+    <polyline points="18 3 21 6 18 9" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 function isLikelyValidPhone(raw) {
   try {
@@ -64,7 +86,15 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
   const initialFlat = splitFlatNumber(initial?.flat_number);
   const [tower, setTower] = useState(initialFlat.tower);
   const [unit, setUnit] = useState(initialFlat.unit);
-  const [occupancyType, setOccupancyType] = useState(initial?.occupancy_type || 'owner');
+  // The form shows Owner / Tenant. "Owner" plus the off-site toggle maps
+  // to occupancy_type 'owner_offsite'; there is no separate button for it.
+  const initialOccupancy = initial?.occupancy_type || 'owner';
+  const [occupancyBase, setOccupancyBase] = useState(
+    initialOccupancy === 'tenant' ? 'tenant' : 'owner'
+  );
+  const [ownerOffsite, setOwnerOffsite] = useState(initialOccupancy === 'owner_offsite');
+  const occupancyType =
+    occupancyBase === 'owner' ? (ownerOffsite ? 'owner_offsite' : 'owner') : 'tenant';
   const [residentName, setResidentName] = useState(initial?.resident_name || '');
   const [gender, setGender] = useState(initial?.gender || '');
   const [phone, setPhone] = useState(initial?.phone || '');
@@ -236,30 +266,40 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
         <div className="segmented segmented-full">
           <button
             type="button"
-            className={occupancyType === 'owner' ? 'active' : ''}
-            onClick={() => setOccupancyType('owner')}
+            className={occupancyBase === 'owner' ? 'active' : ''}
+            onClick={() => setOccupancyBase('owner')}
           >
             <span className="segmented-icon">{UnitIcon}</span> Owner
           </button>
           <button
             type="button"
-            className={occupancyType === 'tenant' ? 'active' : ''}
-            onClick={() => setOccupancyType('tenant')}
+            className={occupancyBase === 'tenant' ? 'active' : ''}
+            onClick={() => {
+              setOccupancyBase('tenant');
+              setOwnerOffsite(false);
+            }}
           >
             <span className="segmented-icon">{UserIcon}</span> Tenant
           </button>
-          <button
-            type="button"
-            className={occupancyType === 'owner_offsite' ? 'active' : ''}
-            onClick={() => setOccupancyType('owner_offsite')}
-          >
-            <span className="segmented-icon">{UnitIcon}</span> Owner (off-site)
-          </button>
         </div>
-        {occupancyType === 'owner_offsite' && (
-          <div style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>
-            Registered owner of this flat who doesn't currently live here — e.g. a landlord renting it out.
-          </div>
+        {occupancyBase === 'owner' && (
+          <>
+            <button
+              type="button"
+              className={`toggle-row${ownerOffsite ? ' is-on' : ''}`}
+              onClick={() => setOwnerOffsite((v) => !v)}
+              aria-pressed={ownerOffsite}
+            >
+              <span className="toggle-row-icon">{HomeOffIcon}</span>
+              <span className="toggle-row-label">Owner does not live here (off-site landlord)</span>
+              <span className="toggle-switch" aria-hidden="true" />
+            </button>
+            {ownerOffsite && (
+              <div style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 6 }}>
+                Registered owner of this flat who doesn't currently live here — e.g. a landlord renting it out.
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -299,16 +339,30 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
 
       <div className="form-row">
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <label htmlFor="gender">Gender</label>
+          <label>Gender</label>
           <span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>Optional</span>
         </div>
-        <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
-          <option value="">Not specified</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-          <option value="prefer_not_to_say">Prefer not to say</option>
-        </select>
+        <div className="segmented segmented-full">
+          <button
+            type="button"
+            className={gender === 'male' ? 'active' : ''}
+            onClick={() => setGender(gender === 'male' ? '' : 'male')}
+          >
+            <span className="segmented-icon">{MaleIcon}</span> Male
+          </button>
+          <button
+            type="button"
+            className={gender === 'female' ? 'active' : ''}
+            onClick={() => setGender(gender === 'female' ? '' : 'female')}
+          >
+            <span className="segmented-icon">{FemaleIcon}</span> Female
+          </button>
+        </div>
+        {!gender && (
+          <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 4 }}>
+            Not specified — tap again to clear a selection.
+          </div>
+        )}
       </div>
 
       <div className="form-row">

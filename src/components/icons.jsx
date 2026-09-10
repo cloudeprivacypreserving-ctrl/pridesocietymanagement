@@ -111,3 +111,28 @@ export const Inbox = (
     <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+// Mars symbol — circle with an arrow pointing up-right.
+export const Male = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <circle cx="10" cy="14" r="6" />
+    <line x1="14.5" y1="9.5" x2="20" y2="4" strokeLinecap="round" />
+    <polyline points="15 4 20 4 20 9" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+// Venus symbol — circle with a cross below.
+export const Female = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <circle cx="12" cy="8" r="6" />
+    <line x1="12" y1="14" x2="12" y2="22" strokeLinecap="round" />
+    <line x1="9" y1="19" x2="15" y2="19" strokeLinecap="round" />
+  </svg>
+);
+// Home with a small "away" arrow — an owner registered off-site.
+export const HomeOff = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <path d="M3 11l9-8 9 8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" strokeLinecap="round" strokeLinejoin="round" />
+    <line x1="14" y1="6" x2="21" y2="6" strokeLinecap="round" />
+    <polyline points="18 3 21 6 18 9" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);

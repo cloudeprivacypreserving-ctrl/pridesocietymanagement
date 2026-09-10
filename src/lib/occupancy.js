@@ -19,8 +19,6 @@ export function isOwnerType(type) {
 export const GENDER_LABELS = {
   male: 'Male',
   female: 'Female',
-  other: 'Other',
-  prefer_not_to_say: 'Prefer not to say',
 };
 
 export function genderLabel(g) {

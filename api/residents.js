@@ -5,7 +5,7 @@ const { ok, fail } = require('./_lib/responses');
 const { normalizeFlatNumber } = require('./_lib/flatNumber');
 const { normalizePhone } = require('./_lib/phone');
 
-const GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
+const GENDERS = ['male', 'female'];
 
 // Handles both /api/residents (list, create) and /api/residents/:id
 // (get, update, delete) in one function to stay under Vercel Hobby's

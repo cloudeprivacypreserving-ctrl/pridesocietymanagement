@@ -37,20 +37,17 @@ const LAST_NAMES = [
   'Malhotra', 'Kapoor', 'Bose', 'Chatterjee',
 ];
 const RELATIONS = ['', ' (spouse)', ' (parent)', ' (co-tenant)'];
-const GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
+const GENDERS = ['male', 'female'];
 
 function randomFrom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// Weighted so most rows have a concrete gender, a few are "prefer not to
-// say", and some are left null (not specified) — mirrors real data.
+// Mostly a concrete gender, a small slice left null (not specified).
 function randomGender() {
   const r = Math.random();
-  if (r < 0.45) return 'male';
-  if (r < 0.9) return 'female';
-  if (r < 0.95) return 'other';
-  if (r < 0.98) return 'prefer_not_to_say';
+  if (r < 0.48) return 'male';
+  if (r < 0.96) return 'female';
   return null;
 }
 

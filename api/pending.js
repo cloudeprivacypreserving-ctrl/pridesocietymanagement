@@ -89,7 +89,7 @@ async function handleSubmit(req, res) {
   if (!auth) return;
 
   const { flat_number, occupancy_type, resident_name, phone, email, photo_path, gender } = req.body || {};
-  const GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
+  const GENDERS = ['male', 'female'];
 
   if (!flat_number || !occupancy_type || !resident_name || !phone) {
     return fail(res, 400, 'flat_number, occupancy_type, resident_name, and phone are required');
