@@ -5,7 +5,7 @@
 //   node scripts/bulk-import-residents.js path/to/residents.csv [--dry-run]
 //
 // CSV columns (header row required), in any order:
-//   flat_number, occupancy_type, resident_name, phone, email (optional),
+//   flat_number, occupancy_type, resident_name, phone (optional), email (optional),
 //   gender (optional: male/female),
 //   is_council_member (optional, "true"/"false"), lease_expiry_date (optional, YYYY-MM-DD)
 //
@@ -91,15 +91,16 @@ async function main() {
   rows.forEach((row, i) => {
     const lineNum = i + 2; // +1 for header, +1 for 1-indexing
     try {
-      if (!row.flat_number || !row.occupancy_type || !row.resident_name || !row.phone) {
-        throw new Error('flat_number, occupancy_type, resident_name, and phone are required');
+      if (!row.flat_number || !row.occupancy_type || !row.resident_name) {
+        throw new Error('flat_number, occupancy_type, and resident_name are required');
       }
       if (!['owner', 'tenant', 'owner_offsite'].includes(row.occupancy_type.toLowerCase())) {
         throw new Error(`occupancy_type must be "owner", "tenant", or "owner_offsite", got "${row.occupancy_type}"`);
       }
 
       const flat_number = normalizeFlatNumber(row.flat_number);
-      const phone = normalizePhone(row.phone);
+      // Phone is optional — validate only if a value is present.
+      const phone = (row.phone || '').trim() ? normalizePhone(row.phone) : null;
       const occupancy_type = row.occupancy_type.toLowerCase();
       const lease_expiry_date = row.lease_expiry_date || null;
 

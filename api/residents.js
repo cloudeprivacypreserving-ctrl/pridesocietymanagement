@@ -131,8 +131,8 @@ async function handleCreate(req, res) {
     lease_expiry_date,
   } = req.body || {};
 
-  if (!flat_number || !occupancy_type || !resident_name || !phone) {
-    return fail(res, 400, 'flat_number, occupancy_type, resident_name, and phone are required');
+  if (!flat_number || !occupancy_type || !resident_name) {
+    return fail(res, 400, 'flat_number, occupancy_type, and resident_name are required');
   }
   if (!['owner', 'tenant', 'owner_offsite'].includes(occupancy_type)) {
     return fail(res, 400, 'occupancy_type must be owner, tenant, or owner_offsite', 'occupancy_type');
@@ -151,11 +151,14 @@ async function handleCreate(req, res) {
     return fail(res, 400, err.message, 'flat_number');
   }
 
-  let normalizedPhone;
-  try {
-    normalizedPhone = normalizePhone(phone);
-  } catch (err) {
-    return fail(res, 400, err.message, 'phone');
+  // Phone is optional; only validate/normalize it when one is supplied.
+  let normalizedPhone = null;
+  if (phone != null && String(phone).trim() !== '') {
+    try {
+      normalizedPhone = normalizePhone(phone);
+    } catch (err) {
+      return fail(res, 400, err.message, 'phone');
+    }
   }
 
   const supabase = getSupabaseAdmin();
@@ -255,10 +258,15 @@ async function handleUpdate(req, res, id) {
   if (occupancy_type !== undefined) updates.occupancy_type = occupancy_type;
   if (resident_name !== undefined) updates.resident_name = resident_name;
   if (phone !== undefined) {
-    try {
-      updates.phone = normalizePhone(phone);
-    } catch (err) {
-      return fail(res, 400, err.message, 'phone');
+    // A blank phone clears the field; a non-blank one must be valid.
+    if (phone == null || String(phone).trim() === '') {
+      updates.phone = null;
+    } else {
+      try {
+        updates.phone = normalizePhone(phone);
+      } catch (err) {
+        return fail(res, 400, err.message, 'phone');
+      }
     }
   }
   if (email !== undefined) updates.email = email;

@@ -34,7 +34,7 @@ export default function ResidentCard({ resident, linkTo, linkLabel }) {
         </div>
         <div className="resident-card-meta">
           <span className="resident-card-meta-icon">{PhoneIcon}</span>
-          {resident.phone}
+          {resident.phone || 'No phone on file'}
         </div>
         {(leaseText || resident.is_council_member || resident.vehicle_count > 0) && (
           <div className="resident-card-substatus">

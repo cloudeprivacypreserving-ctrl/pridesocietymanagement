@@ -75,7 +75,7 @@ export default function ResidentDetail() {
               <div className="detail-row">
                 <span className="pill pill-approved" style={{ marginLeft: 20 }}>{occupancyLabel(resident.occupancy_type)}</span>
               </div>
-              <div className="detail-row"><span className="detail-icon">{Phone}</span> {resident.phone}</div>
+              <div className="detail-row"><span className="detail-icon">{Phone}</span> {resident.phone || '—'}</div>
               <div className="detail-row"><span className="detail-icon">{Mail}</span> {resident.email || '—'}</div>
               {genderLabel(resident.gender) && (
                 <div className="detail-row">
@@ -126,7 +126,7 @@ export default function ResidentDetail() {
                       <strong>{mate.resident_name}</strong>{' '}
                       <span className="pill pill-approved" style={{ marginLeft: 4 }}>{occupancyLabel(mate.occupancy_type)}</span>
                     </span>
-                    <span style={{ color: 'var(--ink-dim)' }}>{mate.phone}</span>
+                    <span style={{ color: 'var(--ink-dim)' }}>{mate.phone || '—'}</span>
                   </Link>
                 ))}
               </div>

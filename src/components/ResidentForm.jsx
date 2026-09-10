@@ -172,8 +172,8 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
     e.preventDefault();
     setError('');
 
-    if (!unit.trim() || !residentName.trim() || !phone.trim()) {
-      setError('Flat number, resident name, and phone are required');
+    if (!unit.trim() || !residentName.trim()) {
+      setError('Flat number and resident name are required');
       return;
     }
 
@@ -185,12 +185,15 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
       return;
     }
 
-    let normalizedPhone;
-    try {
-      normalizedPhone = normalizePhone(phone);
-    } catch (err) {
-      setError(err.message);
-      return;
+    // Phone is optional — only validate a value that was actually entered.
+    let normalizedPhone = null;
+    if (phone.trim()) {
+      try {
+        normalizedPhone = normalizePhone(phone);
+      } catch (err) {
+        setError(err.message);
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -370,6 +373,7 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
           <label htmlFor="phone">Mobile phone</label>
           {!phoneValid && <span className="field-flag field-flag-danger">{XCircleIcon} Invalid entry</span>}
           {phoneTouched && phoneValid && <span className="field-flag field-flag-ok">{CheckCircleIcon} Valid</span>}
+          {!phoneTouched && <span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>Optional</span>}
         </div>
         <div className={`input-icon-wrap${!phoneValid ? ' input-icon-wrap-invalid' : ''}`}>
           <span className="input-icon">{PhoneIcon}</span>
@@ -381,16 +385,15 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
             placeholder="9876543210"
             maxLength={13}
             className={!phoneValid ? 'input-invalid' : ''}
-            required
           />
         </div>
         {!phoneValid ? (
           <div style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4 }}>
-            Enter a valid 10-digit Indian mobile number
+            Enter a valid 10-digit Indian mobile number, or leave it blank
           </div>
         ) : (
           <div style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>
-            10-digit mobile number, optionally prefixed with +91.
+            10-digit mobile number, optionally prefixed with +91. Leave blank if not known.
           </div>
         )}
       </div>
