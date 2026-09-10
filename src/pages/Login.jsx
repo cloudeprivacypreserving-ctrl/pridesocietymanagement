@@ -77,6 +77,14 @@ export default function Login() {
   // Brief success pose latch — navigation usually happens first, but if
   // routing is delayed the officer gives a thumbs-up rather than idling.
   const [mascotSuccess, setMascotSuccess] = useState(false);
+  // Admin self-service password reset by email (revealed by "Emergency
+  // Reset?"). Declared here with every other hook — all hook calls must
+  // run before the early <Navigate> return below, or the hook count
+  // changes between renders and React throws.
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetMsg, setResetMsg] = useState('');
   const navigate = useNavigate();
   const clock = useClock();
 
@@ -131,12 +139,6 @@ export default function Login() {
     setPassword(e.target.value);
     if (error) setError('');
   }
-
-  // --- Admin self-service password reset by email ---
-  const [resetOpen, setResetOpen] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetBusy, setResetBusy] = useState(false);
-  const [resetMsg, setResetMsg] = useState('');
 
   async function handleResetRequest(e) {
     e.preventDefault();
