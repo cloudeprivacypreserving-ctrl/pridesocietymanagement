@@ -5,12 +5,17 @@ import sohoLogo from '../assets/soho-logo.png';
 import { Lock } from '../components/icons';
 
 export default function SetPassword() {
-  const { completePasswordSetup } = useAuth();
+  const { session, profile, completePasswordSetup } = useAuth();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  // This page serves two flows: a first-login invite (profile exists with
+  // must_change_password) and a password-recovery email link (a temporary
+  // recovery session, profile may already be fully set up).
+  const isRecovery = !!session && !!profile && !profile.must_change_password;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -45,14 +50,18 @@ export default function SetPassword() {
             <div>
               <div className="terminal-brand-title">
                 <span className="input-icon" style={{ position: 'static', transform: 'none', width: 18, height: 18 }}>{Lock}</span>
-                Set your password
+                {isRecovery ? 'Reset your password' : 'Set your password'}
               </div>
-              <div className="terminal-brand-sub">One-time account setup</div>
+              <div className="terminal-brand-sub">
+                {isRecovery ? 'Password recovery' : 'One-time account setup'}
+              </div>
             </div>
           </div>
 
           <div className="terminal-notice">
-            You've been invited to Society Entry. Choose a password to finish setting up your account.
+            {isRecovery
+              ? 'You followed a password reset link. Choose a new password for your account.'
+              : "You've been invited to Society Entry. Choose a password to finish setting up your account."}
           </div>
 
           <form onSubmit={handleSubmit}>
