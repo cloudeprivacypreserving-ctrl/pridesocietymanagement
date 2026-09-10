@@ -37,9 +37,21 @@ const LAST_NAMES = [
   'Malhotra', 'Kapoor', 'Bose', 'Chatterjee',
 ];
 const RELATIONS = ['', ' (spouse)', ' (parent)', ' (co-tenant)'];
+const GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
 
 function randomFrom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Weighted so most rows have a concrete gender, a few are "prefer not to
+// say", and some are left null (not specified) — mirrors real data.
+function randomGender() {
+  const r = Math.random();
+  if (r < 0.45) return 'male';
+  if (r < 0.9) return 'female';
+  if (r < 0.95) return 'other';
+  if (r < 0.98) return 'prefer_not_to_say';
+  return null;
 }
 
 function randomPhone() {
@@ -117,6 +129,7 @@ async function main() {
         flat_number: flat,
         occupancy_type: 'owner_offsite',
         resident_name: `${NAME_PREFIX} ${randomFrom(FIRST_NAMES)} ${randomFrom(LAST_NAMES)}`,
+        gender: randomGender(),
         phone: randomPhone(),
         email: null,
         is_council_member: false,
@@ -134,6 +147,7 @@ async function main() {
           flat_number: flat,
           occupancy_type: 'tenant',
           resident_name: `${NAME_PREFIX} ${randomFrom(FIRST_NAMES)} ${randomFrom(LAST_NAMES)}${i === 0 ? '' : randomFrom(RELATIONS)}`,
+          gender: randomGender(),
           phone: randomPhone(),
           email: null,
           is_council_member: false,
@@ -150,6 +164,7 @@ async function main() {
           flat_number: flat,
           occupancy_type: 'owner',
           resident_name: `${NAME_PREFIX} ${randomFrom(FIRST_NAMES)} ${randomFrom(LAST_NAMES)}${i === 0 ? '' : randomFrom(RELATIONS)}`,
+          gender: randomGender(),
           phone: randomPhone(),
           email: null,
           is_council_member: false,

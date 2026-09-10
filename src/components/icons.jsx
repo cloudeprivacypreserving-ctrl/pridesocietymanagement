@@ -29,6 +29,12 @@ export const UserPlus = (
     <line x1="16" y1="11" x2="22" y2="11" strokeLinecap="round" />
   </svg>
 );
+export const User = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" strokeLinecap="round" />
+  </svg>
+);
 export const ClipboardList = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
     <rect x="6" y="4" width="12" height="16" rx="2" />

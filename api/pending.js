@@ -88,13 +88,17 @@ async function handleSubmit(req, res) {
   const auth = await requireRole(req, res, ['admin', 'security']);
   if (!auth) return;
 
-  const { flat_number, occupancy_type, resident_name, phone, email, photo_path } = req.body || {};
+  const { flat_number, occupancy_type, resident_name, phone, email, photo_path, gender } = req.body || {};
+  const GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
 
   if (!flat_number || !occupancy_type || !resident_name || !phone) {
     return fail(res, 400, 'flat_number, occupancy_type, resident_name, and phone are required');
   }
   if (!['owner', 'tenant', 'owner_offsite'].includes(occupancy_type)) {
     return fail(res, 400, 'occupancy_type must be owner, tenant, or owner_offsite', 'occupancy_type');
+  }
+  if (gender != null && gender !== '' && !GENDERS.includes(gender)) {
+    return fail(res, 400, `gender must be one of: ${GENDERS.join(', ')}`, 'gender');
   }
 
   let normalizedFlat;
@@ -122,6 +126,7 @@ async function handleSubmit(req, res) {
       phone: normalizedPhone,
       email: email || null,
       photo_path: photo_path || null,
+      gender: gender || null,
       submitted_by: auth.profile.id,
     })
     .select()

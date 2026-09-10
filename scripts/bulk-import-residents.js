@@ -6,6 +6,7 @@
 //
 // CSV columns (header row required), in any order:
 //   flat_number, occupancy_type, resident_name, phone, email (optional),
+//   gender (optional: male/female/other/prefer_not_to_say),
 //   is_council_member (optional, "true"/"false"), lease_expiry_date (optional, YYYY-MM-DD)
 //
 // Multiple rows may share the same flat_number — a flat can have several
@@ -106,10 +107,16 @@ async function main() {
         throw new Error('lease_expiry_date only applies to tenants');
       }
 
+      const gender = (row.gender || '').toLowerCase() || null;
+      if (gender && !['male', 'female', 'other', 'prefer_not_to_say'].includes(gender)) {
+        throw new Error(`gender must be male/female/other/prefer_not_to_say, got "${row.gender}"`);
+      }
+
       validRows.push({
         flat_number,
         occupancy_type,
         resident_name: row.resident_name,
+        gender,
         phone,
         email: row.email || null,
         is_council_member: String(row.is_council_member).toLowerCase() === 'true',

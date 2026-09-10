@@ -5,6 +5,8 @@ const { ok, fail } = require('./_lib/responses');
 const { normalizeFlatNumber } = require('./_lib/flatNumber');
 const { normalizePhone } = require('./_lib/phone');
 
+const GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
+
 // Handles both /api/residents (list, create) and /api/residents/:id
 // (get, update, delete) in one function to stay under Vercel Hobby's
 // per-deployment function limit. The id, if present, comes from the
@@ -124,6 +126,7 @@ async function handleCreate(req, res) {
     phone,
     email,
     photo_path,
+    gender,
     is_council_member,
     lease_expiry_date,
   } = req.body || {};
@@ -133,6 +136,9 @@ async function handleCreate(req, res) {
   }
   if (!['owner', 'tenant', 'owner_offsite'].includes(occupancy_type)) {
     return fail(res, 400, 'occupancy_type must be owner, tenant, or owner_offsite', 'occupancy_type');
+  }
+  if (gender != null && gender !== '' && !GENDERS.includes(gender)) {
+    return fail(res, 400, `gender must be one of: ${GENDERS.join(', ')}`, 'gender');
   }
   if (lease_expiry_date && occupancy_type !== 'tenant') {
     return fail(res, 400, 'lease_expiry_date only applies to tenants', 'lease_expiry_date');
@@ -163,6 +169,7 @@ async function handleCreate(req, res) {
       phone: normalizedPhone,
       email: email || null,
       photo_path: photo_path || null,
+      gender: gender || null,
       is_council_member: !!is_council_member,
       lease_expiry_date: lease_expiry_date || null,
       created_by: auth.profile.id,
@@ -222,12 +229,16 @@ async function handleUpdate(req, res, id) {
     phone,
     email,
     photo_path,
+    gender,
     is_council_member,
     lease_expiry_date,
   } = req.body || {};
 
   if (occupancy_type && !['owner', 'tenant', 'owner_offsite'].includes(occupancy_type)) {
     return fail(res, 400, 'occupancy_type must be owner, tenant, or owner_offsite', 'occupancy_type');
+  }
+  if (gender != null && gender !== '' && !GENDERS.includes(gender)) {
+    return fail(res, 400, `gender must be one of: ${GENDERS.join(', ')}`, 'gender');
   }
   if (lease_expiry_date && occupancy_type && occupancy_type !== 'tenant') {
     return fail(res, 400, 'lease_expiry_date only applies to tenants', 'lease_expiry_date');
@@ -252,6 +263,7 @@ async function handleUpdate(req, res, id) {
   }
   if (email !== undefined) updates.email = email;
   if (photo_path !== undefined) updates.photo_path = photo_path;
+  if (gender !== undefined) updates.gender = gender || null;
   if (is_council_member !== undefined) updates.is_council_member = !!is_council_member;
   if (lease_expiry_date !== undefined) updates.lease_expiry_date = lease_expiry_date || null;
 

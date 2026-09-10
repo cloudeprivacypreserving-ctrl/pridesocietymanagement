@@ -16,6 +16,17 @@ export function isOwnerType(type) {
   return type === 'owner' || type === 'owner_offsite';
 }
 
+export const GENDER_LABELS = {
+  male: 'Male',
+  female: 'Female',
+  other: 'Other',
+  prefer_not_to_say: 'Prefer not to say',
+};
+
+export function genderLabel(g) {
+  return GENDER_LABELS[g] || null;
+}
+
 // True when a flat's resident list has tenants but no owner-of-record
 // (onsite or offsite) at all — a gap worth flagging in the UI.
 export function flatMissingOwner(residents) {

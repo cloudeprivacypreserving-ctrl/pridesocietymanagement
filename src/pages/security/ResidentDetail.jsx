@@ -4,8 +4,8 @@ import Layout from '../../components/Layout';
 import ResidentPhoto from '../../components/ResidentPhoto';
 import VehiclesSection from '../../components/VehiclesSection';
 import { api } from '../../lib/api';
-import { ArrowLeft, Home, Phone, Mail, Calendar, UserPlus } from '../../components/icons';
-import { occupancyLabel, flatMissingOwner } from '../../lib/occupancy';
+import { ArrowLeft, Home, Phone, Mail, Calendar, UserPlus, User } from '../../components/icons';
+import { occupancyLabel, flatMissingOwner, genderLabel } from '../../lib/occupancy';
 
 export default function ResidentDetail() {
   const { id } = useParams();
@@ -39,6 +39,9 @@ export default function ResidentDetail() {
           </div>
           <div className="detail-row"><span className="detail-icon">{Phone}</span> {resident.phone}</div>
           <div className="detail-row"><span className="detail-icon">{Mail}</span> {resident.email || '—'}</div>
+          {genderLabel(resident.gender) && (
+            <div className="detail-row"><span className="detail-icon">{User}</span> {genderLabel(resident.gender)}</div>
+          )}
           {resident.occupancy_type === 'tenant' && (
             <div className="detail-row"><span className="detail-icon">{Calendar}</span> Lease expiry: {resident.lease_expiry_date || '—'}</div>
           )}

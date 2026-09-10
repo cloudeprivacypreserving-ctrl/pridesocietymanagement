@@ -66,6 +66,7 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
   const [unit, setUnit] = useState(initialFlat.unit);
   const [occupancyType, setOccupancyType] = useState(initial?.occupancy_type || 'owner');
   const [residentName, setResidentName] = useState(initial?.resident_name || '');
+  const [gender, setGender] = useState(initial?.gender || '');
   const [phone, setPhone] = useState(initial?.phone || '');
   const [email, setEmail] = useState(initial?.email || '');
   const [photoPath, setPhotoPath] = useState(initial?.photo_path || null);
@@ -168,6 +169,7 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
         flat_number: normalizedFlat,
         occupancy_type: occupancyType,
         resident_name: residentName.trim(),
+        gender: gender || null,
         phone: normalizedPhone,
         email: email.trim() || null,
         photo_path: photoPath,
@@ -293,6 +295,20 @@ export default function ResidentForm({ initial, onSubmit, submitLabel, showAdmin
           <span className="input-icon">{UserIcon}</span>
           <input id="resident_name" value={residentName} onChange={(e) => setResidentName(e.target.value)} required />
         </div>
+      </div>
+
+      <div className="form-row">
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <label htmlFor="gender">Gender</label>
+          <span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>Optional</span>
+        </div>
+        <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
+          <option value="">Not specified</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+          <option value="prefer_not_to_say">Prefer not to say</option>
+        </select>
       </div>
 
       <div className="form-row">
