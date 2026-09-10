@@ -288,6 +288,7 @@ input::placeholder { color: var(--ink-faint); }
   color: var(--ink);
 }
 .value-sub { font-size: 13px; color: var(--ink-faint); font-weight: 400; margin-left: 4px; }
+.stat-tile-note { font-size: 11.5px; color: var(--ink-faint); margin-top: 10px; line-height: 1.4; }
 
 .stat-bar {
   height: 7px;

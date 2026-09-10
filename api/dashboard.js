@@ -10,34 +10,38 @@ module.exports = async function handler(req, res) {
 
   const supabase = getSupabaseAdmin();
 
-  const [totalRes, ownersRes, tenantsRes, pendingRes] = await Promise.all([
-    supabase.from('residents').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-    supabase
-      .from('residents')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'active')
-      .in('occupancy_type', ['owner', 'owner_offsite']),
-    supabase
-      .from('residents')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'active')
-      .eq('occupancy_type', 'tenant'),
+  const activeResidents = () =>
+    supabase.from('residents').select('id', { count: 'exact', head: true }).eq('status', 'active');
+
+  const [ownerRes, tenantRes, offsiteRes, pendingRes] = await Promise.all([
+    activeResidents().eq('occupancy_type', 'owner'),
+    activeResidents().eq('occupancy_type', 'tenant'),
+    activeResidents().eq('occupancy_type', 'owner_offsite'),
     supabase
       .from('pending_approvals')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'pending'),
   ]);
 
-  const errored = [totalRes, ownersRes, tenantsRes, pendingRes].find((r) => r.error);
+  const errored = [ownerRes, tenantRes, offsiteRes, pendingRes].find((r) => r.error);
   if (errored) {
     console.error('Dashboard query failed:', errored.error.message);
     return fail(res, 500, 'Failed to load dashboard analytics');
   }
 
+  const owners = ownerRes.count || 0;
+  const tenants = tenantRes.count || 0;
+  const offsiteOwners = offsiteRes.count || 0;
+
   return ok(res, {
-    total_residents: totalRes.count || 0,
-    total_owners: ownersRes.count || 0,
-    total_tenants: tenantsRes.count || 0,
+    // People who actually live in the society (owner-occupiers + tenants).
+    // Off-site owners are landlords on record and are NOT counted here.
+    residing: owners + tenants,
+    owner_occupiers: owners,
+    tenants,
+    offsite_owners: offsiteOwners,
+    // Everyone we hold a record for, residing or not.
+    total_records: owners + tenants + offsiteOwners,
     pending_approvals: pendingRes.count || 0,
   });
 };

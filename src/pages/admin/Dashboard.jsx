@@ -66,8 +66,9 @@ export default function Dashboard() {
       .catch(() => {});
   }, []);
 
-  const ownerPct = stats && stats.total_residents > 0 ? Math.round((stats.total_owners / stats.total_residents) * 100) : 0;
-  const tenantPct = stats && stats.total_residents > 0 ? Math.round((stats.total_tenants / stats.total_residents) * 100) : 0;
+  const residing = stats?.residing || 0;
+  const ownerPct = residing > 0 ? Math.round((stats.owner_occupiers / residing) * 100) : 0;
+  const tenantPct = residing > 0 ? Math.round((stats.tenants / residing) * 100) : 0;
   const hasPending = stats && stats.pending_approvals > 0;
 
   return (
@@ -80,18 +81,19 @@ export default function Dashboard() {
           <div className="stat-grid">
             <div className="stat-tile">
               <div className="stat-tile-head">
-                <div className="label">Total residents</div>
+                <div className="label">Residing in society</div>
                 <div className="stat-icon">{ICONS.residents}</div>
               </div>
-              <div className="value">{stats.total_residents}</div>
+              <div className="value">{stats.residing}</div>
+              <div className="stat-tile-note">{stats.total_records} records incl. off-site owners</div>
             </div>
 
             <div className="stat-tile">
               <div className="stat-tile-head">
-                <div className="label">Owners</div>
+                <div className="label">Owner-occupied</div>
                 <div className="stat-icon">{ICONS.key}</div>
               </div>
-              <div className="value">{stats.total_owners} <span className="value-sub">{ownerPct}%</span></div>
+              <div className="value">{stats.owner_occupiers} <span className="value-sub">{ownerPct}%</span></div>
               <div className="stat-bar"><div className="stat-bar-fill" style={{ width: `${ownerPct}%` }} /></div>
             </div>
 
@@ -100,8 +102,17 @@ export default function Dashboard() {
                 <div className="label">Tenants</div>
                 <div className="stat-icon">{ICONS.briefcase}</div>
               </div>
-              <div className="value">{stats.total_tenants} <span className="value-sub">{tenantPct}%</span></div>
+              <div className="value">{stats.tenants} <span className="value-sub">{tenantPct}%</span></div>
               <div className="stat-bar"><div className="stat-bar-fill" style={{ width: `${tenantPct}%` }} /></div>
+            </div>
+
+            <div className="stat-tile">
+              <div className="stat-tile-head">
+                <div className="label">Off-site owners</div>
+                <div className="stat-icon">{ICONS.key}</div>
+              </div>
+              <div className="value">{stats.offsite_owners}</div>
+              <div className="stat-tile-note">Landlords on record, not residing</div>
             </div>
 
             <div className={`stat-tile${hasPending ? ' stat-tile-alert' : ''}`}>
