@@ -95,11 +95,19 @@ async function handleRequestReset(req, res) {
     return genericResponse();
   }
 
-  // Derive the site origin from the request so the recovery link points
-  // back to this deployment's /set-password page.
+  // Where the recovery link should land. Prefer an explicit env var so
+  // this is stable regardless of which host the request came from (a
+  // reset triggered from localhost must still send a production link).
+  // Fall back to the request's forwarded host, then to the known prod URL.
   const proto = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
-  const host = req.headers['x-forwarded-host'] || req.headers.host;
-  const redirectTo = `${proto}://${host}/set-password`;
+  const host = req.headers['x-forwarded-host'] || req.headers.host || '';
+  const requestOrigin = host ? `${proto}://${host}` : '';
+  const siteUrl = (
+    process.env.PUBLIC_SITE_URL ||
+    (requestOrigin && !requestOrigin.includes('localhost') ? requestOrigin : '') ||
+    'https://pridesocietymanagement.vercel.app'
+  ).replace(/\/$/, '');
+  const redirectTo = `${siteUrl}/set-password`;
 
   const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, { redirectTo });
 
