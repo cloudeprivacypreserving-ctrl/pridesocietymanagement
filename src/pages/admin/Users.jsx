@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import Layout from '../../components/Layout';
 import { api } from '../../lib/api';
-import { UserPlus, Mail, CheckCircle, Lock } from '../../components/icons';
+import { useAuth } from '../../context/AuthContext';
+import { UserPlus, Mail, CheckCircle, Lock, Trash } from '../../components/icons';
 
 const UserIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -171,10 +172,50 @@ function ResetPasswordRow({ user, onDone }) {
   );
 }
 
+function DeleteUserButton({ user, disabled, disabledReason, onDeleted }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleDelete() {
+    setError('');
+    const ok = window.confirm(
+      `Delete ${user.full_name} (${user.role})? This permanently removes their login. ` +
+        `Residents and history they created stay, but are no longer attributed to them. This cannot be undone.`
+    );
+    if (!ok) return;
+    setBusy(true);
+    try {
+      await api.post('/users', { action: 'delete', user_id: user.id });
+      onDeleted?.();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+      <button
+        className="btn btn-sm btn-danger"
+        onClick={handleDelete}
+        disabled={busy || disabled}
+        title={disabled ? disabledReason : undefined}
+      >
+        <span className="btn-icon">{Trash}</span> {busy ? 'Deleting…' : 'Delete'}
+      </button>
+      {error && <div className="error-text" style={{ fontSize: 12 }}>{error}</div>}
+    </div>
+  );
+}
+
 export default function Users() {
+  const { profile } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+
+  const adminCount = users.filter((u) => u.role === 'admin').length;
 
   function load() {
     setLoading(true);
@@ -227,6 +268,23 @@ export default function Users() {
                   </div>
                   <div className="user-row-action">
                     <ResetPasswordRow user={u} onDone={load} />
+                    {(() => {
+                      const isSelf = u.id === profile?.id;
+                      const isLastAdmin = u.role === 'admin' && adminCount <= 1;
+                      const blocked = isSelf || isLastAdmin;
+                      return (
+                        <DeleteUserButton
+                          user={u}
+                          disabled={blocked}
+                          disabledReason={
+                            isSelf
+                              ? 'You cannot delete your own account'
+                              : 'Cannot delete the last Admin account'
+                          }
+                          onDeleted={load}
+                        />
+                      );
+                    })()}
                   </div>
                 </div>
               ))}
