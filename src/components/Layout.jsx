@@ -48,6 +48,13 @@ const ICONS = {
       <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
+  logout: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 17l5-5-5-5" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="21" y1="12" x2="9" y2="12" strokeLinecap="round" />
+    </svg>
+  ),
 };
 
 const ADMIN_LINKS = [
@@ -98,6 +105,15 @@ export default function Layout({ children }) {
             <span className={`pill ${profile?.role === 'admin' ? 'pill-approved' : 'pill-pending'}`}>{profile?.role}</span>
           </div>
           <div className="avatar-badge">{initials(profile?.full_name)}</div>
+          <button
+            type="button"
+            className="topbar-signout"
+            onClick={signOut}
+            aria-label="Sign out"
+            title="Sign out"
+          >
+            {ICONS.logout}
+          </button>
         </div>
       </header>
 
