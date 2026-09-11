@@ -1,45 +1,39 @@
 // Role-based avatar for Admin / Security accounts. There's no photo
 // upload for staff accounts, so instead of plain initials this renders a
-// small illustrated badge that differs by role — a crested shield for
-// Admin, a peaked cap for Security — each tinted with that role's color.
-// Pure inline SVG, no assets.
+// small flat-icon-style badge that differs by role: a person wearing a
+// necktie with a star badge for Admin, a person in a peaked cap for
+// Security. Solid-fill glyphs on a solid role-colored circle — the
+// classic "Flaticon" look. Pure inline SVG, no assets.
 const AdminGlyph = (
-  <svg viewBox="0 0 32 32" fill="none">
+  <svg viewBox="0 0 24 24">
+    <circle cx="12" cy="8.2" r="3.7" fill="#fff" />
     <path
-      d="M16 3l10 3.6v7.2c0 7-4.3 11.9-10 14.2C10.3 25.7 6 20.8 6 13.8V6.6L16 3z"
-      fill="currentColor"
-      fillOpacity="0.16"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinejoin="round"
+      d="M4.6 20.5c.5-4.3 3.7-7 7.4-7s6.9 2.7 7.4 7c.1.6-.4 1.1-1 1.1H5.6c-.6 0-1.1-.5-1-1.1z"
+      fill="#fff"
     />
+    <path d="M12 13.5l1.6 2.6-1.6 3.4-1.6-3.4z" fill="currentColor" />
     <path
-      d="M11.5 16.2l3 3 6-6.4"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      d="M17.2 5.3l.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5 1.5-.5z"
+      fill="#fff"
     />
   </svg>
 );
 
 const SecurityGlyph = (
-  <svg viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="13" fill="currentColor" fillOpacity="0.16" />
+  <svg viewBox="0 0 24 24">
     <path
-      d="M8 14c0-4.4 3.6-8 8-8s8 3.6 8 8"
-      stroke="currentColor"
-      strokeWidth="1.7"
+      d="M6.4 10.5c0-3.3 2.5-6 5.6-6s5.6 2.7 5.6 6"
+      fill="none"
+      stroke="#fff"
+      strokeWidth="1.6"
       strokeLinecap="round"
     />
-    <rect x="7" y="13.5" width="18" height="4.6" rx="2.3" fill="currentColor" stroke="currentColor" strokeWidth="1.2" />
+    <rect x="5" y="9.6" width="14" height="3.6" rx="1.8" fill="#fff" />
+    <circle cx="12" cy="11.4" r="1.15" fill="currentColor" />
     <path
-      d="M11 18.5v3a5 5 0 0 0 10 0v-3"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
+      d="M5 20.6c.4-3.9 3.3-6.4 7-6.4s6.6 2.5 7 6.4c.1.6-.4 1.1-1 1.1H6c-.6 0-1.1-.5-1-1.1z"
+      fill="#fff"
     />
-    <circle cx="16" cy="16" r="1.5" fill="var(--surface, #fff)" />
   </svg>
 );
 
