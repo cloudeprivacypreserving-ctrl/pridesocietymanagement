@@ -1,6 +1,7 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import sohoLogo from '../assets/soho-logo.png';
+import RoleAvatar from './RoleAvatar';
 
 const ICONS = {
   dashboard: (
@@ -71,16 +72,6 @@ const SECURITY_LINKS = [
   { to: '/security/submissions', label: 'My submissions', icon: 'submissions' },
 ];
 
-function initials(name) {
-  if (!name) return '?';
-  return name
-    .split(' ')
-    .map((p) => p[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
-
 export default function Layout({ children }) {
   const { profile, signOut } = useAuth();
   const location = useLocation();
@@ -104,7 +95,7 @@ export default function Layout({ children }) {
             <span className="topbar-user-name">{profile?.full_name}</span>
             <span className={`pill ${profile?.role === 'admin' ? 'pill-approved' : 'pill-pending'}`}>{profile?.role}</span>
           </div>
-          <div className="avatar-badge">{initials(profile?.full_name)}</div>
+          <RoleAvatar role={profile?.role} size={34} />
           <button
             type="button"
             className="topbar-signout"
@@ -128,8 +119,11 @@ export default function Layout({ children }) {
           </nav>
           <div className="sidebar-footer">
             <div className="sidebar-user">
-              <div className="name">{profile?.full_name}</div>
-              <div className="role">{profile?.role}</div>
+              <RoleAvatar role={profile?.role} size={36} />
+              <div>
+                <div className="name">{profile?.full_name}</div>
+                <div className="role">{profile?.role}</div>
+              </div>
             </div>
             <button className="btn" style={{ width: '100%' }} onClick={signOut}>
               Sign out
