@@ -188,15 +188,14 @@ input::placeholder { color: var(--ink-faint); }
 .topbar-user-name { font-size: 13px; color: var(--ink); font-weight: 600; }
 .role-avatar {
   border-radius: 50%;
+  background: var(--surface-2);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
 }
-.role-avatar svg { width: 68%; height: 68%; }
-.role-avatar-admin { background: var(--accent); color: var(--accent); }
-.role-avatar-security { background: var(--amber); color: var(--amber); }
+.role-avatar img { width: 68%; height: 68%; object-fit: contain; }
 .topbar-signout {
   width: 34px;
   height: 34px;
