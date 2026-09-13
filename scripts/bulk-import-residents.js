@@ -27,6 +27,7 @@ const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 const { normalizeFlatNumber } = require('../api/_lib/flatNumber');
 const { normalizePhone } = require('../api/_lib/phone');
+const { toUpperName } = require('../api/_lib/textCase');
 
 const BATCH_SIZE = 50;
 const BATCH_DELAY_MS = 300;
@@ -116,7 +117,7 @@ async function main() {
       validRows.push({
         flat_number,
         occupancy_type,
-        resident_name: row.resident_name,
+        resident_name: toUpperName(row.resident_name),
         gender,
         phone,
         email: row.email || null,

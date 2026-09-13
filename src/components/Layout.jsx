@@ -56,12 +56,20 @@ const ICONS = {
       <line x1="21" y1="12" x2="9" y2="12" strokeLinecap="round" />
     </svg>
   ),
+  issues: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="12" y1="9" x2="12" y2="13" strokeLinecap="round" />
+      <line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round" />
+    </svg>
+  ),
 };
 
 const ADMIN_LINKS = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: 'dashboard' },
   { to: '/admin/residents', label: 'Residents', icon: 'residents' },
   { to: '/admin/pending', label: 'Approvals', icon: 'approvals' },
+  { to: '/admin/issues', label: 'Issues', icon: 'issues' },
   { to: '/admin/users', label: 'Users', icon: 'users' },
   { to: '/admin/audit-log', label: 'Audit', icon: 'audit' },
 ];

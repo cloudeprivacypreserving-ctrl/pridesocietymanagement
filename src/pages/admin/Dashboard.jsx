@@ -12,6 +12,9 @@ const ACTION_LABELS = {
   resident_deleted: 'Resident deleted',
   vehicle_added: 'Vehicle added',
   vehicle_removed: 'Vehicle removed',
+  issue_created: 'Issue logged',
+  issue_updated: 'Issue updated',
+  issue_deleted: 'Issue deleted',
 };
 
 function timeAgo(iso) {

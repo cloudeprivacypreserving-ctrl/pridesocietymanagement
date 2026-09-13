@@ -2,6 +2,7 @@ const { getSupabaseAdmin } = require('./_lib/supabaseAdmin');
 const { requireRole } = require('./_lib/auth');
 const { writeAuditLog } = require('./_lib/audit');
 const { ok, fail } = require('./_lib/responses');
+const { toUpperName } = require('./_lib/textCase');
 
 // Admin-only user management:
 //   GET    /api/users                  — list all Admin/Security accounts
@@ -79,6 +80,7 @@ async function handleInvite(req, res, auth) {
     return fail(res, 400, 'role must be admin or security', 'role');
   }
 
+  const upperName = toUpperName(full_name);
   const supabase = getSupabaseAdmin();
 
   const { data: created, error: createError } = await supabase.auth.admin.inviteUserByEmail(email);
@@ -91,7 +93,7 @@ async function handleInvite(req, res, auth) {
 
   const { error: profileError } = await supabase.from('profiles').insert({
     id: created.user.id,
-    full_name,
+    full_name: upperName,
     role,
     must_change_password: true,
   });
@@ -107,10 +109,10 @@ async function handleInvite(req, res, auth) {
     action: 'user_created',
     targetTable: 'profiles',
     targetId: created.user.id,
-    details: { email, full_name, role },
+    details: { email, full_name: upperName, role },
   });
 
-  return ok(res, { id: created.user.id, email, full_name, role }, 201);
+  return ok(res, { id: created.user.id, email, full_name: upperName, role }, 201);
 }
 
 const MIN_PASSWORD_LENGTH = 10;

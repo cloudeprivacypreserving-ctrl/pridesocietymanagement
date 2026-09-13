@@ -4,6 +4,7 @@ const { writeAuditLog } = require('./_lib/audit');
 const { ok, fail } = require('./_lib/responses');
 const { normalizeFlatNumber } = require('./_lib/flatNumber');
 const { normalizePhone } = require('./_lib/phone');
+const { toUpperName } = require('./_lib/textCase');
 
 const GENDERS = ['male', 'female'];
 
@@ -144,6 +145,8 @@ async function handleCreate(req, res) {
     return fail(res, 400, 'lease_expiry_date only applies to tenants', 'lease_expiry_date');
   }
 
+  const upperName = toUpperName(resident_name);
+
   let normalizedFlat;
   try {
     normalizedFlat = normalizeFlatNumber(flat_number);
@@ -168,7 +171,7 @@ async function handleCreate(req, res) {
     .insert({
       flat_number: normalizedFlat,
       occupancy_type,
-      resident_name,
+      resident_name: upperName,
       phone: normalizedPhone,
       email: email || null,
       photo_path: photo_path || null,
@@ -256,7 +259,7 @@ async function handleUpdate(req, res, id) {
     }
   }
   if (occupancy_type !== undefined) updates.occupancy_type = occupancy_type;
-  if (resident_name !== undefined) updates.resident_name = resident_name;
+  if (resident_name !== undefined) updates.resident_name = toUpperName(resident_name);
   if (phone !== undefined) {
     // A blank phone clears the field; a non-blank one must be valid.
     if (phone == null || String(phone).trim() === '') {
@@ -283,11 +286,11 @@ async function handleUpdate(req, res, id) {
   const { data, error } = await supabase.from('residents').update(updates).eq('id', id).select().single();
 
   if (error) {
+    if (error.code === 'PGRST116') {
+      return fail(res, 404, 'Resident not found');
+    }
     console.error('Update resident failed:', error.message);
     return fail(res, 500, 'Failed to update resident');
-  }
-  if (!data) {
-    return fail(res, 404, 'Resident not found');
   }
 
   await writeAuditLog({
@@ -309,11 +312,11 @@ async function handleDelete(req, res, id) {
   const { data, error } = await supabase.from('residents').delete().eq('id', id).select().single();
 
   if (error) {
+    if (error.code === 'PGRST116') {
+      return fail(res, 404, 'Resident not found');
+    }
     console.error('Delete resident failed:', error.message);
     return fail(res, 500, 'Failed to delete resident');
-  }
-  if (!data) {
-    return fail(res, 404, 'Resident not found');
   }
 
   await writeAuditLog({

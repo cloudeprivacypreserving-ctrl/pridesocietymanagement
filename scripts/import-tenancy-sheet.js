@@ -33,6 +33,7 @@ const zlib = require('zlib');
 const { createClient } = require('@supabase/supabase-js');
 const { normalizeFlatNumber } = require('../api/_lib/flatNumber');
 const { normalizePhone } = require('../api/_lib/phone');
+const { toUpperName } = require('../api/_lib/textCase');
 
 const BATCH_SIZE = 50;
 const FLAT_FIXUPS = { B17006: 'B1706' };
@@ -244,7 +245,10 @@ function optGender(raw) {
   return g;
 }
 function cleanName(raw) {
-  return (raw || '').replace(/\s+/g, ' ').trim();
+  // Uppercased to match the app's convention (residents.resident_name is
+  // always stored uppercase), so imports don't create case-mismatched
+  // near-duplicates of names entered through the UI.
+  return toUpperName(raw);
 }
 function fixFlat(raw) {
   const t = (raw || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');

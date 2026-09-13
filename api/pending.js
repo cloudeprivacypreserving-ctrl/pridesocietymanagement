@@ -4,6 +4,7 @@ const { writeAuditLog } = require('./_lib/audit');
 const { ok, fail } = require('./_lib/responses');
 const { normalizeFlatNumber } = require('./_lib/flatNumber');
 const { normalizePhone } = require('./_lib/phone');
+const { toUpperName } = require('./_lib/textCase');
 
 // Handles /api/pending (list, submit) and /api/pending/:id/approve,
 // /api/pending/:id/reject in one function to stay under Vercel Hobby's
@@ -125,7 +126,7 @@ async function handleSubmit(req, res) {
     .insert({
       flat_number: normalizedFlat,
       occupancy_type,
-      resident_name,
+      resident_name: toUpperName(resident_name),
       phone: normalizedPhone,
       email: email || null,
       photo_path: photo_path || null,

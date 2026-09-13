@@ -19,6 +19,7 @@ const routes = [
   { prefix: '/api/photos', handler: () => require('../api/photos') },
   { prefix: '/api/profile', handler: () => require('../api/profile') },
   { prefix: '/api/vehicles', handler: () => require('../api/vehicles') },
+  { prefix: '/api/issues', handler: () => require('../api/issues') },
 ];
 
 const PORT = 3000;

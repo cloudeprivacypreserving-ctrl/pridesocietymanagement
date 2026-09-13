@@ -15,6 +15,7 @@ import AdminResidentsList from './pages/admin/ResidentsList';
 import AdminResidentDetail from './pages/admin/ResidentDetail';
 import AdminAddResident from './pages/admin/AddResident';
 import PendingApprovals from './pages/admin/PendingApprovals';
+import Issues from './pages/admin/Issues';
 import Users from './pages/admin/Users';
 import AuditLog from './pages/admin/AuditLog';
 
@@ -60,6 +61,9 @@ export default function App() {
       } />
       <Route path="/admin/pending" element={
         <ProtectedRoute allowedRoles={['admin']}><PendingApprovals /></ProtectedRoute>
+      } />
+      <Route path="/admin/issues" element={
+        <ProtectedRoute allowedRoles={['admin']}><Issues /></ProtectedRoute>
       } />
       <Route path="/admin/users" element={
         <ProtectedRoute allowedRoles={['admin']}><Users /></ProtectedRoute>

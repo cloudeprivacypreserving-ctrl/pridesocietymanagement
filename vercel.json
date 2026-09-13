@@ -6,6 +6,7 @@
   "rewrites": [
     { "source": "/api/residents/:id", "destination": "/api/residents" },
     { "source": "/api/users/:id", "destination": "/api/users" },
+    { "source": "/api/issues/:id", "destination": "/api/issues" },
     { "source": "/api/pending/:id/:action", "destination": "/api/pending" },
     { "source": "/api/vehicles/:id", "destination": "/api/vehicles" },
     { "source": "/api/photos/:action", "destination": "/api/photos" },
