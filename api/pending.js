@@ -142,6 +142,7 @@ async function handleSubmit(req, res) {
   }
 
   await writeAuditLog({
+    req,
     actorId: auth.profile.id,
     action: 'resident_submitted',
     targetTable: 'pending_approvals',
@@ -178,6 +179,7 @@ async function handleApprove(req, res, id) {
   }
 
   await writeAuditLog({
+    req,
     actorId: auth.profile.id,
     action: 'resident_approved',
     targetTable: 'residents',
@@ -231,6 +233,7 @@ async function handleReject(req, res, id) {
   }
 
   await writeAuditLog({
+    req,
     actorId: auth.profile.id,
     action: 'resident_rejected',
     targetTable: 'pending_approvals',

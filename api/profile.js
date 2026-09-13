@@ -119,6 +119,7 @@ async function handleRequestReset(req, res) {
   }
 
   await writeAuditLog({
+    req,
     actorId: authUserId,
     action: 'admin_password_reset_requested',
     targetTable: 'profiles',

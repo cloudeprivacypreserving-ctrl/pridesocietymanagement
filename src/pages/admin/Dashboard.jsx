@@ -15,6 +15,7 @@ const ACTION_LABELS = {
   issue_created: 'Issue logged',
   issue_updated: 'Issue updated',
   issue_deleted: 'Issue deleted',
+  audit_log_purged: 'Audit log purged',
 };
 
 function timeAgo(iso) {

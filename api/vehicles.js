@@ -109,6 +109,7 @@ async function handleCreate(req, res) {
   }
 
   await writeAuditLog({
+    req,
     actorId: auth.profile.id,
     action: 'vehicle_added',
     targetTable: 'vehicles',
@@ -131,6 +132,7 @@ async function handleDelete(req, res, id) {
   }
 
   await writeAuditLog({
+    req,
     actorId: auth.profile.id,
     action: 'vehicle_removed',
     targetTable: 'vehicles',

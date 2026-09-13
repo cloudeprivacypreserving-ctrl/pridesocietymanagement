@@ -111,6 +111,7 @@ async function handleCreate(req, res, auth) {
   }
 
   await writeAuditLog({
+    req,
     actorId: auth.profile.id,
     action: 'issue_created',
     targetTable: 'issues',
@@ -167,6 +168,7 @@ async function handleUpdate(req, res, auth, id) {
   }
 
   await writeAuditLog({
+    req,
     actorId: auth.profile.id,
     action: 'issue_updated',
     targetTable: 'issues',
@@ -190,6 +192,7 @@ async function handleDelete(req, res, auth, id) {
   }
 
   await writeAuditLog({
+    req,
     actorId: auth.profile.id,
     action: 'issue_deleted',
     targetTable: 'issues',

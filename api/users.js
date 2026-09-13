@@ -105,6 +105,7 @@ async function handleInvite(req, res, auth) {
   }
 
   await writeAuditLog({
+    req,
     actorId: auth.profile.id,
     action: 'user_created',
     targetTable: 'profiles',
@@ -153,6 +154,7 @@ async function handleSetPassword(req, res, auth) {
   await supabase.from('profiles').update({ must_change_password: false }).eq('id', user_id);
 
   await writeAuditLog({
+    req,
     actorId: auth.profile.id,
     action: 'user_password_reset',
     targetTable: 'profiles',
@@ -217,6 +219,7 @@ async function handleDelete(req, res, auth, userId) {
   // Write the audit entry while the acting Admin still exists, then
   // detach this user's own past audit entries.
   await writeAuditLog({
+    req,
     actorId: auth.profile.id,
     action: 'user_deleted',
     targetTable: 'profiles',

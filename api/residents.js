@@ -190,6 +190,7 @@ async function handleCreate(req, res) {
   }
 
   await writeAuditLog({
+    req,
     actorId: auth.profile.id,
     action: 'resident_created',
     targetTable: 'residents',
@@ -294,6 +295,7 @@ async function handleUpdate(req, res, id) {
   }
 
   await writeAuditLog({
+    req,
     actorId: auth.profile.id,
     action: 'resident_updated',
     targetTable: 'residents',
@@ -320,6 +322,7 @@ async function handleDelete(req, res, id) {
   }
 
   await writeAuditLog({
+    req,
     actorId: auth.profile.id,
     action: 'resident_deleted',
     targetTable: 'residents',
