@@ -18,6 +18,11 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  // MFA status for the current account/session — null while unknown.
+  //   hasVerifiedFactor: the account has completed TOTP enrollment
+  //   needsChallenge: a verified factor exists but this session hasn't
+  //     completed the AAL2 challenge yet (must re-enter a code)
+  const [mfaStatus, setMfaStatus] = useState(null);
   const signOutRef = useRef(null);
 
   useEffect(() => {
@@ -36,6 +41,7 @@ export function AuthProvider({ children }) {
         loadProfile(newSession.user.id);
       } else {
         setProfile(null);
+        setMfaStatus(null);
         setLoading(false);
         localStorage.removeItem(SESSION_START_KEY);
       }
@@ -76,12 +82,36 @@ export function AuthProvider({ children }) {
       .eq('id', userId)
       .single();
     setProfile(data || null);
+    await refreshMfaStatus();
     setLoading(false);
+  }
+
+  async function refreshMfaStatus() {
+    try {
+      const [{ data: aal }, { data: factorsData }] = await Promise.all([
+        supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+        supabase.auth.mfa.listFactors(),
+      ]);
+      const verifiedTotp = (factorsData?.totp || []).find((f) => f.status === 'verified');
+      setMfaStatus({
+        hasVerifiedFactor: !!verifiedTotp,
+        // nextLevel is aal2 whenever a verified factor exists; if the
+        // current session hasn't completed that challenge yet, currentLevel
+        // stays aal1 — that's the "must challenge now" condition.
+        needsChallenge: !!verifiedTotp && aal?.currentLevel !== aal?.nextLevel,
+      });
+    } catch (err) {
+      console.error('Failed to read MFA status:', err.message);
+      setMfaStatus({ hasVerifiedFactor: false, needsChallenge: false });
+    }
   }
 
   async function signIn(email, password) {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    // onAuthStateChange fires loadProfile -> refreshMfaStatus, but do it
+    // eagerly too so the caller's next navigation sees fresh state.
+    await refreshMfaStatus();
   }
 
   async function signOut() {
@@ -99,7 +129,16 @@ export function AuthProvider({ children }) {
     setProfile((prev) => (prev ? { ...prev, must_change_password: false } : prev));
   }
 
-  const value = { session, profile, loading, signIn, signOut, completePasswordSetup };
+  const value = {
+    session,
+    profile,
+    loading,
+    mfaStatus,
+    signIn,
+    signOut,
+    completePasswordSetup,
+    refreshMfaStatus,
+  };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

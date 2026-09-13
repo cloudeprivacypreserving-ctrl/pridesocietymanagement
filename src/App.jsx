@@ -4,6 +4,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 import Login from './pages/Login';
 import SetPassword from './pages/SetPassword';
+import MfaSetup from './pages/MfaSetup';
+import MfaChallenge from './pages/MfaChallenge';
 
 import SecurityResidentsList from './pages/security/ResidentsList';
 import SecurityResidentDetail from './pages/security/ResidentDetail';
@@ -20,10 +22,14 @@ import Users from './pages/admin/Users';
 import AuditLog from './pages/admin/AuditLog';
 
 function Home() {
-  const { profile, loading } = useAuth();
+  const { profile, loading, mfaStatus } = useAuth();
   if (loading) return null;
   if (!profile) return <Navigate to="/login" replace />;
   if (profile.must_change_password) return <Navigate to="/set-password" replace />;
+  if (profile.role === 'admin' && mfaStatus && !mfaStatus.hasVerifiedFactor) {
+    return <Navigate to="/mfa-setup" replace />;
+  }
+  if (mfaStatus && mfaStatus.needsChallenge) return <Navigate to="/mfa-challenge" replace />;
   return <Navigate to={profile.role === 'admin' ? '/admin/dashboard' : '/security/residents'} replace />;
 }
 
@@ -32,6 +38,8 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/set-password" element={<SetPassword />} />
+      <Route path="/mfa-setup" element={<MfaSetup />} />
+      <Route path="/mfa-challenge" element={<MfaChallenge />} />
       <Route path="/" element={<Home />} />
 
       <Route path="/security/residents" element={
