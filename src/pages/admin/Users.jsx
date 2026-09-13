@@ -22,6 +22,9 @@ function CreateUserForm({ onCreated }) {
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('security');
+  const [method, setMethod] = useState('email'); // 'email' | 'password'
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -30,13 +33,33 @@ function CreateUserForm({ onCreated }) {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    if (method === 'password') {
+      if (password.length < MIN_PASSWORD_LENGTH) {
+        setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
+        return;
+      }
+      if (password !== confirm) {
+        setError('Passwords do not match');
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
-      await api.post('/users', { email: email.trim(), full_name: fullName.trim(), role });
-      setSuccess(`Invitation sent to ${email}. They'll set their own password on first login.`);
+      const payload = { email: email.trim(), full_name: fullName.trim(), role };
+      if (method === 'password') payload.password = password;
+      await api.post('/users', payload);
+      setSuccess(
+        method === 'password'
+          ? `Account created for ${email}. Give them the password directly — it's active immediately.`
+          : `Invitation sent to ${email}. They'll set their own password on first login.`
+      );
       setEmail('');
       setFullName('');
       setRole('security');
+      setPassword('');
+      setConfirm('');
       onCreated?.();
     } catch (err) {
       setError(err.message);
@@ -72,6 +95,48 @@ function CreateUserForm({ onCreated }) {
           </button>
         </div>
       </div>
+      <div className="form-row">
+        <label>How should they get access?</label>
+        <div className="segmented segmented-full">
+          <button type="button" className={method === 'email' ? 'active' : ''} onClick={() => setMethod('email')}>
+            <span className="segmented-icon">{Mail}</span> Email invite
+          </button>
+          <button type="button" className={method === 'password' ? 'active' : ''} onClick={() => setMethod('password')}>
+            <span className="segmented-icon">{Lock}</span> Set password now
+          </button>
+        </div>
+        <div style={{ fontSize: 11.5, color: 'var(--ink-faint)', marginTop: 5 }}>
+          {method === 'email'
+            ? "Supabase emails them a link to set their own password. Subject to Supabase's send-rate limit — space out invites if creating several at once."
+            : 'No email sent. You set the password now and hand it over directly — works instantly, no rate limit.'}
+        </div>
+      </div>
+      {method === 'password' && (
+        <>
+          <div className="form-row">
+            <label htmlFor="new_user_password">Password (min. {MIN_PASSWORD_LENGTH} characters)</label>
+            <input
+              id="new_user_password"
+              type="text"
+              autoComplete="off"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-row">
+            <label htmlFor="new_user_password_confirm">Confirm password</label>
+            <input
+              id="new_user_password_confirm"
+              type="text"
+              autoComplete="off"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              required
+            />
+          </div>
+        </>
+      )}
       {error && <div className="error-text">{error}</div>}
       {success && (
         <div className="field-flag field-flag-ok" style={{ marginTop: 10, fontSize: 13 }}>
@@ -79,7 +144,7 @@ function CreateUserForm({ onCreated }) {
         </div>
       )}
       <button className="btn btn-primary" type="submit" disabled={submitting} style={{ marginTop: 14, width: '100%' }}>
-        {submitting ? 'Sending invite...' : 'Send invite'}
+        {submitting ? 'Creating…' : method === 'password' ? 'Create account' : 'Send invite'}
       </button>
     </form>
   );

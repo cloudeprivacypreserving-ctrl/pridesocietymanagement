@@ -6,12 +6,25 @@ const { toUpperName } = require('./_lib/textCase');
 
 // Admin-only user management:
 //   GET    /api/users                  — list all Admin/Security accounts
-//   POST   /api/users                  — invite a new user by email
+//   POST   /api/users  { email, full_name, role }
+//                                      — invite a new user by email
+//                                        (Supabase sends a real invite
+//                                        email; subject to its free-tier
+//                                        send-rate limit).
+//   POST   /api/users  { email, full_name, role, password }
+//                                      — create a new user with a password
+//                                        the Admin sets directly, no email
+//                                        sent at all. Useful when the
+//                                        email sender is rate-limited, or
+//                                        the account's inbox is a shared/
+//                                        aliased address the Admin will
+//                                        relay from anyway.
 //   POST   /api/users  { action: 'set-password', user_id, password }
-//                                      — set a user's password directly
-//                                        (used to reset a Security officer's
-//                                        password; the Admin then hands the
-//                                        new password over in person).
+//                                      — set an existing user's password
+//                                        directly (used to reset a
+//                                        Security officer's password; the
+//                                        Admin then hands it over in
+//                                        person).
 //   DELETE /api/users/:id              — permanently remove a user
 //   POST   /api/users  { action: 'delete', user_id }  — same as DELETE,
 //                                        for clients that can't send a body
@@ -70,8 +83,10 @@ async function handleList(req, res) {
   return ok(res, { users });
 }
 
+const MIN_PASSWORD_LENGTH = 10;
+
 async function handleInvite(req, res, auth) {
-  const { email, full_name, role } = req.body || {};
+  const { email, full_name, role, password } = req.body || {};
 
   if (!email || !full_name || !role) {
     return fail(res, 400, 'email, full_name, and role are required');
@@ -79,11 +94,25 @@ async function handleInvite(req, res, auth) {
   if (!['admin', 'security'].includes(role)) {
     return fail(res, 400, 'role must be admin or security', 'role');
   }
+  if (password != null && (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH)) {
+    return fail(res, 400, `Password must be at least ${MIN_PASSWORD_LENGTH} characters`, 'password');
+  }
 
   const upperName = toUpperName(full_name);
   const supabase = getSupabaseAdmin();
 
-  const { data: created, error: createError } = await supabase.auth.admin.inviteUserByEmail(email);
+  // Two creation paths:
+  //  - password supplied: create the account directly with that password,
+  //    no email sent at all. Bypasses Supabase's rate-limited email
+  //    sender entirely — useful for onboarding several accounts at once,
+  //    or when the inbox is a shared/aliased address the Admin relays
+  //    from anyway. The Admin hands the password to the person directly.
+  //  - no password: the existing emailed-invite flow — Supabase sends a
+  //    real invite link and the person sets their own password.
+  const usingDirectPassword = !!password;
+  const { data: created, error: createError } = usingDirectPassword
+    ? await supabase.auth.admin.createUser({ email, password, email_confirm: true })
+    : await supabase.auth.admin.inviteUserByEmail(email);
 
   if (createError || !created?.user) {
     const message = createError?.message || 'Failed to create user';
@@ -95,7 +124,9 @@ async function handleInvite(req, res, auth) {
     id: created.user.id,
     full_name: upperName,
     role,
-    must_change_password: true,
+    // A direct-password account is immediately usable, same convention
+    // as the admin "set new password" reset action — no forced change.
+    must_change_password: !usingDirectPassword,
   });
 
   if (profileError) {
@@ -110,13 +141,11 @@ async function handleInvite(req, res, auth) {
     action: 'user_created',
     targetTable: 'profiles',
     targetId: created.user.id,
-    details: { email, full_name: upperName, role },
+    details: { email, full_name: upperName, role, method: usingDirectPassword ? 'password' : 'email_invite' },
   });
 
   return ok(res, { id: created.user.id, email, full_name: upperName, role }, 201);
 }
-
-const MIN_PASSWORD_LENGTH = 10;
 
 async function handleSetPassword(req, res, auth) {
   const { user_id, password } = req.body || {};
