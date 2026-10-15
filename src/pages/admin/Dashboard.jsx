@@ -16,6 +16,7 @@ const ACTION_LABELS = {
   issue_updated: 'Issue updated',
   issue_deleted: 'Issue deleted',
   audit_log_purged: 'Audit log purged',
+  residents_bulk_imported: 'Bulk tenant import',
 };
 
 function timeAgo(iso) {

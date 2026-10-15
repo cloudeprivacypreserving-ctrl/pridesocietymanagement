@@ -6,5 +6,6 @@ dist/
 *.log
 scratchpad/
 scripts/output/
+*.xlsx
 
 .vercel

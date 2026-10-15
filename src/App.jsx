@@ -20,6 +20,7 @@ import PendingApprovals from './pages/admin/PendingApprovals';
 import Issues from './pages/admin/Issues';
 import Users from './pages/admin/Users';
 import AuditLog from './pages/admin/AuditLog';
+import BulkTenants from './pages/admin/BulkTenants';
 
 function Home() {
   const { profile, loading, mfaStatus } = useAuth();
@@ -66,6 +67,9 @@ export default function App() {
       } />
       <Route path="/admin/residents/:id" element={
         <ProtectedRoute allowedRoles={['admin']}><AdminResidentDetail /></ProtectedRoute>
+      } />
+      <Route path="/admin/bulk-tenants" element={
+        <ProtectedRoute allowedRoles={['admin']}><BulkTenants /></ProtectedRoute>
       } />
       <Route path="/admin/pending" element={
         <ProtectedRoute allowedRoles={['admin']}><PendingApprovals /></ProtectedRoute>
