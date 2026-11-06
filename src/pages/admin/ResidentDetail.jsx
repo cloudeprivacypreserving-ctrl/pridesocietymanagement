@@ -22,8 +22,11 @@ export default function ResidentDetail() {
   useEffect(load, [id]);
 
   async function handleUpdate(payload) {
-    const updated = await api.patch(`/residents/${id}`, payload);
-    setResident(updated);
+    await api.patch(`/residents/${id}`, payload);
+    // The PATCH response is the bare resident row (no `flatmates`), unlike
+    // GET /residents/:id — re-fetch the full shape the view below expects
+    // instead of swapping in a response that's missing that field.
+    load();
     setEditing(false);
   }
 
