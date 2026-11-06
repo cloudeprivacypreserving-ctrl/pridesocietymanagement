@@ -23,14 +23,14 @@ import AuditLog from './pages/admin/AuditLog';
 import BulkTenants from './pages/admin/BulkTenants';
 
 function Home() {
-  const { profile, loading, mfaStatus } = useAuth();
+  const { profile, loading, mfaStatus, mfaRequired } = useAuth();
   if (loading) return null;
   if (!profile) return <Navigate to="/login" replace />;
   if (profile.must_change_password) return <Navigate to="/set-password" replace />;
-  if (profile.role === 'admin' && mfaStatus && !mfaStatus.hasVerifiedFactor) {
+  if (mfaRequired && profile.role === 'admin' && mfaStatus && !mfaStatus.hasVerifiedFactor) {
     return <Navigate to="/mfa-setup" replace />;
   }
-  if (mfaStatus && mfaStatus.needsChallenge) return <Navigate to="/mfa-challenge" replace />;
+  if (mfaRequired && mfaStatus && mfaStatus.needsChallenge) return <Navigate to="/mfa-challenge" replace />;
   return <Navigate to={profile.role === 'admin' ? '/admin/dashboard' : '/security/residents'} replace />;
 }
 

@@ -8,7 +8,7 @@ import { Lock } from '../components/icons';
 // Forced one-time setup: an Admin account with no verified TOTP factor is
 // routed here (see ProtectedRoute) before it can use the app at all.
 export default function MfaSetup() {
-  const { session, loading, refreshMfaStatus, signOut } = useAuth();
+  const { session, loading, mfaRequired, refreshMfaStatus, signOut } = useAuth();
   const [enrolling, setEnrolling] = useState(true);
   const [factorId, setFactorId] = useState(null);
   const [qrCode, setQrCode] = useState('');
@@ -78,6 +78,9 @@ export default function MfaSetup() {
 
   if (loading) return null;
   if (!session) return <Navigate to="/login" replace />;
+  // Reachable only via direct navigation/bookmark while MFA is globally
+  // off — ProtectedRoute/Home never redirect here in that state.
+  if (!mfaRequired) return <Navigate to="/" replace />;
 
   return (
     <div className="auth-page">

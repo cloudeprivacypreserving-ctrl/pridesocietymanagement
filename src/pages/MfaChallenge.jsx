@@ -8,7 +8,7 @@ import { Lock } from '../components/icons';
 // Shown after password sign-in when the account has a verified TOTP
 // factor but this session hasn't completed the AAL2 challenge yet.
 export default function MfaChallenge() {
-  const { session, loading, refreshMfaStatus, signOut } = useAuth();
+  const { session, loading, mfaRequired, refreshMfaStatus, signOut } = useAuth();
   const [factorId, setFactorId] = useState(null);
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -59,6 +59,9 @@ export default function MfaChallenge() {
 
   if (loading) return null;
   if (!session) return <Navigate to="/login" replace />;
+  // Reachable only via direct navigation/bookmark while MFA is globally
+  // off — ProtectedRoute/Home never redirect here in that state.
+  if (!mfaRequired) return <Navigate to="/" replace />;
 
   return (
     <div className="auth-page">

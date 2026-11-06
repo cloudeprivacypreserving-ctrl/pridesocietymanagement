@@ -23,6 +23,9 @@ export function AuthProvider({ children }) {
   //   needsChallenge: a verified factor exists but this session hasn't
   //     completed the AAL2 challenge yet (must re-enter a code)
   const [mfaStatus, setMfaStatus] = useState(null);
+  // Global, admin-controlled: whether MFA is enforced at all right now.
+  // Defaults to true (the safer assumption) until the real value loads.
+  const [mfaRequired, setMfaRequired] = useState(true);
   const signOutRef = useRef(null);
 
   useEffect(() => {
@@ -82,8 +85,19 @@ export function AuthProvider({ children }) {
       .eq('id', userId)
       .single();
     setProfile(data || null);
-    await refreshMfaStatus();
+    await Promise.all([refreshMfaStatus(), refreshMfaRequired()]);
     setLoading(false);
+  }
+
+  async function refreshMfaRequired() {
+    try {
+      const result = await api.get('/profile/settings');
+      setMfaRequired(result.mfa_required !== false);
+    } catch (err) {
+      console.error('Failed to read MFA setting:', err.message);
+      // Fail safe toward enforcing MFA rather than silently relaxing it.
+      setMfaRequired(true);
+    }
   }
 
   async function refreshMfaStatus() {
@@ -134,10 +148,12 @@ export function AuthProvider({ children }) {
     profile,
     loading,
     mfaStatus,
+    mfaRequired,
     signIn,
     signOut,
     completePasswordSetup,
     refreshMfaStatus,
+    refreshMfaRequired,
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

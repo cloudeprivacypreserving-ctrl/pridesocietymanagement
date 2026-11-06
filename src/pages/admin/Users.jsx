@@ -150,6 +150,54 @@ function CreateUserForm({ onCreated }) {
   );
 }
 
+function MfaSettingsPanel() {
+  const { mfaRequired, refreshMfaRequired } = useAuth();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleToggle() {
+    setError('');
+    const next = !mfaRequired;
+    const ok = window.confirm(
+      next
+        ? 'Turn MFA back on for all Admin accounts? Anyone without a verified authenticator will be asked to set one up on next login.'
+        : 'Turn MFA off for every account? This immediately skips two-factor login for all Admins, including yours, until switched back on.'
+    );
+    if (!ok) return;
+    setBusy(true);
+    try {
+      await api.post('/profile/settings', { mfa_required: next });
+      await refreshMfaRequired();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="card" style={{ maxWidth: 480 }}>
+      <button
+        type="button"
+        className={`toggle-row${mfaRequired ? ' is-on' : ''}`}
+        onClick={handleToggle}
+        disabled={busy}
+        aria-pressed={mfaRequired}
+      >
+        <span className="toggle-row-icon">{Lock}</span>
+        <span className="toggle-row-label">
+          Require two-factor login for Admins
+          <div style={{ fontSize: 11.5, color: 'var(--ink-faint)', marginTop: 2, fontWeight: 400 }}>
+            Global — applies to every Admin account immediately, not just yours.
+          </div>
+        </span>
+        <span className="toggle-switch" aria-hidden="true" />
+      </button>
+      {error && <div className="error-text" style={{ marginTop: 8 }}>{error}</div>}
+    </div>
+  );
+}
+
 function ResetPasswordRow({ user, onDone }) {
   const [open, setOpen] = useState(false);
   const [pw, setPw] = useState('');
@@ -304,6 +352,11 @@ export default function Users() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+        <section>
+          <h2 style={{ fontSize: 15, marginBottom: 12 }}>Security</h2>
+          <MfaSettingsPanel />
+        </section>
+
         <section>
           <h2 style={{ fontSize: 15, marginBottom: 12 }}>Create user</h2>
           <CreateUserForm onCreated={load} />

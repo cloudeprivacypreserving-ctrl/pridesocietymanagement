@@ -1,5 +1,5 @@
 const { getSupabaseAdmin } = require('./_lib/supabaseAdmin');
-const { requireUser } = require('./_lib/auth');
+const { requireUser, requireRole } = require('./_lib/auth');
 const { writeAuditLog } = require('./_lib/audit');
 const { ok, fail } = require('./_lib/responses');
 
@@ -10,16 +10,75 @@ const { ok, fail } = require('./_lib/responses');
 //     password reset by email, restricted to Admin accounts. Security
 //     accounts are reset by an Admin in-app, not by email, so a
 //     request for a non-admin address is silently ignored.
+//   GET  /api/profile/settings        (authenticated) — reads global
+//     app settings (currently just mfa_required) so the frontend knows
+//     whether to enforce MFA for this session.
+//   POST /api/profile/settings { mfa_required }  (admin only) — flips a
+//     global setting. Applies to every account immediately, not just the
+//     caller's — there's no per-user override.
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') return fail(res, 405, 'Method not allowed');
-
   const url = new URL(req.url, 'http://localhost');
   const action = url.pathname.replace(/^\/api\/profile\/?/, '').split('/').filter(Boolean)[0];
 
+  if (action === 'settings') {
+    if (req.method === 'GET') return handleGetSettings(req, res);
+    if (req.method === 'POST') return handleUpdateSettings(req, res);
+    return fail(res, 405, 'Method not allowed');
+  }
+
+  if (req.method !== 'POST') return fail(res, 405, 'Method not allowed');
   if (action === 'complete-setup') return handleCompleteSetup(req, res);
   if (action === 'request-reset') return handleRequestReset(req, res);
   return fail(res, 404, 'Not found');
 };
+
+async function handleGetSettings(req, res) {
+  const auth = await requireUser(req, res);
+  if (!auth) return;
+
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase.from('app_settings').select('key, value').eq('key', 'mfa_required').single();
+
+  if (error) {
+    console.error('Load settings failed:', error.message);
+    // Fail safe toward the stricter behavior (MFA required) rather than
+    // silently relaxing security if the settings row is unreadable.
+    return ok(res, { mfa_required: true });
+  }
+
+  return ok(res, { mfa_required: data.value === true });
+}
+
+async function handleUpdateSettings(req, res) {
+  const auth = await requireRole(req, res, ['admin']);
+  if (!auth) return;
+
+  const { mfa_required } = req.body || {};
+  if (typeof mfa_required !== 'boolean') {
+    return fail(res, 400, 'mfa_required must be true or false', 'mfa_required');
+  }
+
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase
+    .from('app_settings')
+    .update({ value: mfa_required, updated_at: new Date().toISOString(), updated_by: auth.profile.id })
+    .eq('key', 'mfa_required');
+
+  if (error) {
+    console.error('Update settings failed:', error.message);
+    return fail(res, 500, 'Failed to update setting');
+  }
+
+  await writeAuditLog({
+    req,
+    actorId: auth.profile.id,
+    action: 'settings_updated',
+    targetTable: 'app_settings',
+    details: { key: 'mfa_required', value: mfa_required },
+  });
+
+  return ok(res, { mfa_required });
+}
 
 async function handleCompleteSetup(req, res) {
   const auth = await requireUser(req, res);
